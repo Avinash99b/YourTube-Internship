@@ -1,9 +1,10 @@
 import comment from "../Modals/comment.js";
 import mongoose from "mongoose";
+import translate from "./translator.js";
 
 export const postcomment = async (req, res) => {
   const commentdata = req.body;
-  const postcomment = new comment(commentdata);
+  const postcomment = new comment({...commentdata,translated_body:await translate(commentdata.commentbody)});
   try {
     await postcomment.save();
     return res.status(200).json({ comment: true });
@@ -44,7 +45,7 @@ export const editcomment = async (req, res) => {
   }
   try {
     const updatecomment = await comment.findByIdAndUpdate(_id, {
-      $set: { commentbody: commentbody },
+      $set: { commentbody: commentbody ,translated_body:await translate(commentbody)},
     });
     res.status(200).json(updatecomment);
   } catch (error) {
