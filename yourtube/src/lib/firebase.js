@@ -6,13 +6,14 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCyxbdclt2ocA5zgE-MDy1ndYIFqVMAr30",
-  authDomain: "yourtube-8cda9.firebaseapp.com",
-  projectId: "yourtube-8cda9",
-  storageBucket: "yourtube-8cda9.firebasestorage.app",
-  messagingSenderId: "921641878423",
-  appId: "1:921641878423:web:0d65801eebaf2b25f03ad2",
-};
+    apiKey: "AIzaSyAgXZKw_ceUaWa_GDRnlpz9DeHbEiROJpI",
+    authDomain: "yourtube-internship.firebaseapp.com",
+    projectId: "yourtube-internship",
+    storageBucket: "yourtube-internship.firebasestorage.app",
+    messagingSenderId: "792243458658",
+    appId: "1:792243458658:web:51d8627deaa343e0a0773b",
+    measurementId: "G-K7P4XEP8YC"
+}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

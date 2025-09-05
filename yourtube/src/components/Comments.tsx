@@ -21,24 +21,6 @@ const Comments = ({ videoId }: any) => {
   const [editText, setEditText] = useState("");
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
-  const fetchedComments = [
-    {
-      _id: "1",
-      videoid: videoId,
-      userid: "1",
-      commentbody: "Great video! Really enjoyed watching this.",
-      usercommented: "John Doe",
-      commentedon: new Date(Date.now() - 3600000).toISOString(),
-    },
-    {
-      _id: "2",
-      videoid: videoId,
-      userid: "2",
-      commentbody: "Thanks for sharing this amazing content!",
-      usercommented: "Jane Smith",
-      commentedon: new Date(Date.now() - 7200000).toISOString(),
-    },
-  ];
   useEffect(() => {
     loadComments();
   }, [videoId]);
@@ -213,6 +195,9 @@ const Comments = ({ videoId }: any) => {
                         </button>
                         <button onClick={() => handleDelete(comment._id)}>
                           Delete
+                        </button>
+                          <button onClick={() => handleDelete(comment._id)}>
+                          Translate
                         </button>
                       </div>
                     )}
