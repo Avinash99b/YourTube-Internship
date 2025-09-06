@@ -1,8 +1,12 @@
 import axios from "axios";
 
-async function translate(text) {
+async function translate(text, targetLanguage = "en") {
     if (!text) {
         throw Error("text is required");
+    }
+
+    if (!targetLanguage) {
+        throw Error("targetLanguage is required");
     }
 
     try {
@@ -12,11 +16,11 @@ async function translate(text) {
             url,
             {
                 q: text,
-                target: "en", // target language English
+                target: targetLanguage, // dynamically set target language
             },
             {
-                params: {key: process.env.GOOGLE_API_KEY},
-                headers: {"Content-Type": "application/json"},
+                params: { key: process.env.GOOGLE_API_KEY },
+                headers: { "Content-Type": "application/json" },
             }
         );
 
@@ -26,5 +30,6 @@ async function translate(text) {
         throw Error("Something went wrong");
     }
 }
+
 
 export default translate;
