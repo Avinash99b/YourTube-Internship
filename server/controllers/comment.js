@@ -3,11 +3,27 @@ import mongoose from "mongoose";
 import translate from "./translator.js";
 import comment_reaction from "../Modals/comment_reaction.js";
 
+function hasSpecialChars(text) {
+    // allow letters numbers punctuation . , ? ! ' " - ( ) and spaces
+    // disallow strange symbols like <>{}[]$%^*~`@# etc
+    const regex = /^[A-Za-z0-9\s.,?!'"\-()]+$/u;
+    return !regex.test(text);
+}
+
 export const postcomment = async (req, res) => {
     const commentdata = req.body;
-    const postcomment = new comment({...commentdata, translated_body: await translate(commentdata.commentbody)});
+    if (hasSpecialChars(commentdata.commentbody)) {
+        return res.status(400).json({message:"Content Shouldn't have special characters"})
+    }
+    // Accept location from client, fallback to 'Unknown' if not provided
+    const location = commentdata.location || 'Unknown';
+    const newComment = new comment({
+        ...commentdata,
+        translated_body: await translate(commentdata.commentbody),
+        location
+    });
     try {
-        await postcomment.save();
+        await newComment.save();
         return res.status(200).json({comment: true});
     } catch (error) {
         console.error(" error:", error);
@@ -43,6 +59,9 @@ export const editcomment = async (req, res) => {
     const {commentbody} = req.body;
     if (!mongoose.Types.ObjectId.isValid(_id)) {
         return res.status(404).send("comment unavailable");
+    }
+    if (hasSpecialChars(commentbody)) {
+        return res.status(400).json({message:"Content Shouldn't have special characters"})
     }
     try {
         const updatecomment = await comment.findByIdAndUpdate(_id, {

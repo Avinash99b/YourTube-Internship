@@ -7,6 +7,7 @@ import {useUser} from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
 import {getGoogleTranslateLanguages} from "@/lib/countrycodes";
 import {ThumbsDown, ThumbsUp} from "lucide-react";
+import {toast} from "sonner";
 
 interface Comment {
     _id: string;
@@ -17,7 +18,13 @@ interface Comment {
     commentedon: string;
 }
 
-const Comment = ({comment, setComments}) => {
+// Define CommentProps for the Comment component
+interface CommentProps {
+    comment: Comment;
+    triggerCommentReload: () => void;
+}
+
+const Comment = ({comment, triggerCommentReload}: CommentProps) => {
     const {user} = useUser();
     const [editText, setEditText] = useState("");
     const [editing, setEditing] = useState<boolean>(false);
@@ -25,7 +32,6 @@ const Comment = ({comment, setComments}) => {
     const [showingTranslated, setShowingTranslated] = useState(false)
     const [translateLanguage, setTranslateLanguage] = useState<string>("en")
     const [commentReactionStatus, setCommentReactionStatus] = useState<null | "liked" | "disliked">(null)
-    const [reactions, setReactions] = useState({likes_count: comment.like_count, dislike_count: comment.dislike_count})
 
     const handleEdit = (comment: Comment) => {
         setEditing((prevState) => !prevState);
@@ -40,16 +46,12 @@ const Comment = ({comment, setComments}) => {
                 {commentbody: editText}
             );
             if (res.data) {
-                setComments((prev) =>
-                    prev.map((c) =>
-                        c._id === comment._id ? {...c, commentbody: editText} : c
-                    )
-                );
                 setEditing(false);
                 setEditText("");
+                triggerCommentReload()
             }
-        } catch (error) {
-            console.log(error);
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Something went wrong");
         }
     };
 
@@ -58,9 +60,9 @@ const Comment = ({comment, setComments}) => {
         try {
             const res = await axiosInstance.delete(`/comment/deletecomment/${id}`);
             if (res.data.comment) {
-                setComments((prev) => prev.filter((c) => c._id !== id));
+                triggerCommentReload()
             }
-        } catch (error) {
+        } catch (error: any) {
             console.log(error);
         }
     }
@@ -91,15 +93,7 @@ const Comment = ({comment, setComments}) => {
                 reactionIsLike
             });
             if (res.status === 200) {
-                if (reactionIsLike) {
-                    setReactions({...reactions, likes_count: reactions.likes_count + 1})
-                } else {
-                    setReactions({...reactions, dislike_count: reactions.dislike_count + 1})
-                    if(reactions.dislike_count+1 >= 2){
-                        setComments((prev) => prev.filter((c) => c._id === comment._id))
-                    }
-                }
-                setCommentReactionStatus(reactionIsLike ? "liked" : "disliked")
+                triggerCommentReload()
 
             }
         } catch (error) {
@@ -113,11 +107,7 @@ const Comment = ({comment, setComments}) => {
             const res = await axiosInstance.delete(`/comment/reaction/${comment._id}/${user?._id}`);
             if (res.status === 200) {
                 setCommentReactionStatus(null)
-                if (commentReactionStatus === "liked") {
-                    setReactions({...reactions, likes_count: reactions.likes_count - 1})
-                }else{
-                    setReactions({...reactions, dislike_count: reactions.dislike_count - 1})
-                }
+                triggerCommentReload()
             }
         } catch (error) {
             console.log(error);
@@ -143,27 +133,27 @@ const Comment = ({comment, setComments}) => {
     }
     fetchReaction()
     return (
-
-        <div key={comment._id} className="flex gap-4">
+        <div key={comment._id} className="flex gap-4 p-4 rounded-lg shadow-sm mb-2 transition-colors duration-300 bg-white dark:bg-zinc-900">
             <Avatar className="w-10 h-10">
-                <AvatarImage src="/placeholder.svg?height=40&width=40"/>
-                <AvatarFallback>{comment.usercommented[0]}</AvatarFallback>
+                <AvatarImage src="/placeholder.svg?height=40&width=40" />
+                <AvatarFallback className="bg-gray-200 dark:bg-zinc-700 text-black dark:text-white">{comment.usercommented[0]}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-sm">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="font-medium text-sm text-black dark:text-white">
                     {comment.usercommented}
                   </span>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">{comment.location || "Unknown"}</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400 ml-2">
                     {formatDistanceToNow(new Date(comment.commentedon))} ago
                   </span>
                 </div>
-
                 {editing ? (
                     <div className="space-y-2">
                         <Textarea
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
+                            className="bg-gray-50 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 text-black dark:text-white"
                         />
                         <div className="flex gap-2 justify-end">
                             <Button
@@ -186,7 +176,7 @@ const Comment = ({comment, setComments}) => {
                 ) : (
                     <>
                         {/*  Comment body*/}
-                        <p className="text-sm">{commentBody}</p>
+                        <p className="text-sm text-gray-800 dark:text-gray-200">{commentBody}</p>
 
 
                         <div className="flex gap-2 mt-2 text-sm text-gray-500">
@@ -203,6 +193,7 @@ const Comment = ({comment, setComments}) => {
                                 <button onClick={() => {
                                     setCommentBody(comment.commentbody);
                                     setShowingTranslated(false)
+                                    setTranslateLanguage("en")
                                 }}>Show Original
                                 </button>
                             </> : <button onClick={translateComment}>
@@ -226,7 +217,7 @@ const Comment = ({comment, setComments}) => {
                                                 commentReactionStatus === "liked" ? "fill-black text-black" : ""
                                             }`}
                                         />
-                                        {reactions.likes_count.toLocaleString()}
+                                        {comment.like_count.toLocaleString()}
                                     </Button>
                                     <div className="w-px h-6 bg-gray-300"/>
                                     <Button
@@ -240,7 +231,7 @@ const Comment = ({comment, setComments}) => {
                                                 commentReactionStatus === "disliked" ? "fill-black text-black" : ""
                                             }`}
                                         />
-                                        {reactions.dislike_count.toLocaleString()}
+                                        {comment.dislike_count.toLocaleString()}
                                     </Button>
 
                                 </div>
@@ -253,6 +244,49 @@ const Comment = ({comment, setComments}) => {
         </div>
     )
 }
+
+
+// Utility to get location details using browser geolocation and OpenStreetMap
+async function getLocationDetails() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve({ state: "", city: "", pincode: "", error: "Geolocation not supported" });
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      try {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
+        const response = await fetch(url, {
+          headers: {
+            "User-Agent": "location-app"
+          }
+        });
+        const data = await response.json();
+        if (!data.address) {
+          resolve({ state: "", city: "", pincode: "", error: "Failed to fetch address" });
+          return;
+        }
+        const state = data.address.state || "";
+        const city = data.address.city ||
+                     data.address.town ||
+                     data.address.village ||
+                     data.address.municipality ||
+                     data.address.locality ||
+                     data.address.county || "";
+        const pincode = data.address.postcode || "";
+        resolve({ state, city, pincode });
+      } catch (error) {
+        resolve({ state: "", city: "", pincode: "", error: "Something went wrong" });
+      }
+    }, () => {
+      resolve({ state: "", city: "", pincode: "", error: "Permission denied" });
+    });
+  });
+}
+
 const Comments = ({videoId}: any) => {
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState("");
@@ -278,42 +312,43 @@ const Comments = ({videoId}: any) => {
     }
     const handleSubmitComment = async () => {
         if (!user || !newComment.trim()) return;
-
         setIsSubmitting(true);
         try {
+            // Get location from browser
+            const loc = await getLocationDetails();
+            let location = "Unknown";
+            if (loc.city && loc.state) {
+                location = `${loc.city}/${loc.state}`;
+            }
+            // Post comment with location
             const res = await axiosInstance.post("/comment/postcomment", {
                 videoid: videoId,
                 userid: user._id,
                 commentbody: newComment,
                 usercommented: user.name,
+                location,
             });
             if (res.data.comment) {
-                const newCommentObj: Comment = {
-                    _id: Date.now().toString(),
-                    videoid: videoId,
-                    userid: user._id,
-                    commentbody: newComment,
-                    usercommented: user.name || "Anonymous",
-                    commentedon: new Date().toISOString(),
-                };
                 setComments([]);
 
                 loadComments()
             }
             setNewComment("");
-        } catch (error) {
-            console.error("Error adding comment:", error);
+        } catch (error: any) {
+            toast.error(error.response.data.message)
         } finally {
             setIsSubmitting(false);
         }
     };
-
+    const reloadComments = () => {
+        setComments([])
+        loadComments()
+    }
     return (
         <div className="space-y-6">
-            <h2 className="text-xl font-semibold">{comments.length} Comments</h2>
-
+            <h2 className="text-xl font-semibold text-[var(--foreground)]">{comments.length} Comments</h2>
             {user && (
-                <div className="flex gap-4">
+                <div className="flex gap-4 bg-[var(--card)] p-4 rounded-lg shadow-sm mb-4 transition-colors duration-300">
                     <Avatar className="w-10 h-10">
                         <AvatarImage src={user.image || ""}/>
                         <AvatarFallback>{user.name?.[0] || "U"}</AvatarFallback>
@@ -323,7 +358,7 @@ const Comments = ({videoId}: any) => {
                             placeholder="Add a comment..."
                             value={newComment}
                             onChange={(e: any) => setNewComment(e.target.value)}
-                            className="min-h-[80px] resize-none border-0 border-b-2 rounded-none focus-visible:ring-0"
+                            className="min-h-[80px] resize-none border-0 border-b-2 rounded-none focus-visible:ring-0 bg-transparent text-[var(--card-foreground)]"
                         />
                         <div className="flex gap-2 justify-end">
                             <Button
@@ -350,7 +385,7 @@ const Comments = ({videoId}: any) => {
                     </p>
                 ) : (
                     comments.map((comment) => (
-                        <Comment comment={comment} setComments={setComments}/>
+                        <Comment comment={comment} triggerCommentReload={reloadComments}/>
                     ))
                 )}
             </div>

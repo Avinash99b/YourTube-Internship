@@ -6,7 +6,7 @@ const SearchResult = ({ query }: any) => {
   if (!query.trim()) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-400 transition-colors">
           Enter a search term to find videos and channels.
         </p>
       </div>
@@ -55,8 +55,10 @@ const SearchResult = ({ query }: any) => {
   if (!video) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-xl font-semibold mb-2">No results found</h2>
-        <p className="text-gray-600">
+        <h2 className="text-xl font-semibold mb-2 text-black dark:text-white transition-colors">
+          No results found
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400 transition-colors">
           Try different keywords or remove search filters
         </p>
       </div>
@@ -66,8 +68,10 @@ const SearchResult = ({ query }: any) => {
   if (!hasResults) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-xl font-semibold mb-2">No results found</h2>
-        <p className="text-gray-600">
+        <h2 className="text-xl font-semibold mb-2 text-black dark:text-white transition-colors">
+          No results found
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400 transition-colors">
           Try different keywords or remove search filters
         </p>
       </div>

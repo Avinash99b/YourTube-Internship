@@ -18,22 +18,22 @@ const Sidebar = () => {
 
   const [isdialogeopen, setisdialogeopen] = useState(false);
   return (
-    <aside className="w-64 bg-white  border-r min-h-screen p-2">
+    <aside className="w-64 bg-[var(--sidebar)] border-r border-[var(--sidebar-border)] min-h-screen p-2 transition-colors duration-300">
       <nav className="space-y-1">
         <Link href="/">
-          <Button variant="ghost" className="w-full justify-start">
+          <Button variant="ghost" className="w-full justify-start text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)] transition-colors">
             <Home className="w-5 h-5 mr-3" />
             Home
           </Button>
         </Link>
         <Link href="/explore">
-          <Button variant="ghost" className="w-full justify-start">
+          <Button variant="ghost" className="w-full justify-start text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)] transition-colors">
             <Compass className="w-5 h-5 mr-3" />
             Explore
           </Button>
         </Link>
         <Link href="/subscriptions">
-          <Button variant="ghost" className="w-full justify-start">
+          <Button variant="ghost" className="w-full justify-start text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)] transition-colors">
             <PlaySquare className="w-5 h-5 mr-3" />
             Subscriptions
           </Button>
@@ -41,28 +41,34 @@ const Sidebar = () => {
 
         {user && (
           <>
-            <div className="border-t pt-2 mt-2">
+            <div className="border-t border-[var(--sidebar-border)] pt-2 mt-2">
               <Link href="/history">
-                <Button variant="ghost" className="w-full justify-start">
+                <Button variant="ghost" className="w-full justify-start text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)] transition-colors">
                   <History className="w-5 h-5 mr-3" />
                   History
                 </Button>
               </Link>
               <Link href="/liked">
-                <Button variant="ghost" className="w-full justify-start">
+                <Button variant="ghost" className="w-full justify-start text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)] transition-colors">
                   <ThumbsUp className="w-5 h-5 mr-3" />
                   Liked videos
                 </Button>
               </Link>
               <Link href="/watch-later">
-                <Button variant="ghost" className="w-full justify-start">
+                <Button variant="ghost" className="w-full justify-start text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)] transition-colors">
                   <Clock className="w-5 h-5 mr-3" />
                   Watch later
                 </Button>
               </Link>
+              <Link href="/profile">
+                <Button variant="ghost" className="w-full justify-start text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)] transition-colors">
+                  <User className="w-5 h-5 mr-3" />
+                  Profile
+                </Button>
+              </Link>
               {user?.channelname ? (
                 <Link href={`/channel/${user.id}`}>
-                  <Button variant="ghost" className="w-full justify-start">
+                  <Button variant="ghost" className="w-full justify-start text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)] transition-colors">
                     <User className="w-5 h-5 mr-3" />
                     Your channel
                   </Button>

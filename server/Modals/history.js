@@ -12,6 +12,7 @@ const historyschema = mongoose.Schema(
       required: true,
     },
     likedon: { type: Date, default: Date.now },
+    watchTime: { type: Number, default: 0 }, // in seconds
   },
   {
     timestamps: true,

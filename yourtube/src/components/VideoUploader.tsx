@@ -6,14 +6,19 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Progress } from "./ui/progress";
 import axiosInstance from "@/lib/axiosinstance";
+import { useTheme } from "@/lib/ThemeContext";
 
 const VideoUploader = ({ channelId, channelName }: any) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoTitle, setVideoTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [uploadComplete, setUploadComplete] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { theme } = useTheme();
+
   const handlefilechange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -36,6 +41,7 @@ const VideoUploader = ({ channelId, channelName }: any) => {
   const resetForm = () => {
     setVideoFile(null);
     setVideoTitle("");
+    setDescription("");
     setIsUploading(false);
     setUploadProgress(0);
     setUploadComplete(false);
@@ -58,14 +64,15 @@ const VideoUploader = ({ channelId, channelName }: any) => {
     formdata.append("videotitle", videoTitle);
     formdata.append("videochanel", channelName);
     formdata.append("uploader", channelId);
-    console.log(formdata)
+    if (description) formdata.append("description", description);
+    console.log(formdata);
     try {
       setIsUploading(true);
       setUploadProgress(0);
       const res = await axiosInstance.post("/video/upload", formdata, {
-         headers: {
-    "Content-Type": "multipart/form-data", // ✅ MUST for FormData
-  },
+        headers: {
+          "Content-Type": "multipart/form-data", // ✅ MUST for FormData
+        },
         onUploadProgress: (progresEvent: any) => {
           const progress = Math.round(
             (progresEvent.loaded * 100) / progresEvent.total
@@ -82,100 +89,75 @@ const VideoUploader = ({ channelId, channelName }: any) => {
       setIsUploading(false);
     }
   };
+  const dragAreaClass = `flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-8 cursor-pointer transition-colors duration-300 \
+    ${isDragOver ? (theme === 'dark' ? 'bg-zinc-800 border-blue-400' : 'bg-blue-50 border-blue-400') : (theme === 'dark' ? 'bg-zinc-900 border-zinc-700' : 'bg-gray-50 border-gray-300')}`;
+
   return (
-    <div className="bg-gray-50 rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-4">Upload a video</h2>
-
-      <div className="space-y-4">
-        {!videoFile ? (
-          <div
-            className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:bg-gray-100 transition-colors"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Upload className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-            <p className="text-lg font-medium">
-              Drag and drop video files to upload
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              or click to select files
-            </p>
-            <p className="text-xs text-gray-400 mt-4">
-              MP4, WebM, MOV or AVI • Up to 100MB
-            </p>
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              accept="video/*"
-              onChange={handlefilechange}
-            />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-              <div className="bg-blue-100 p-2 rounded-md">
-                <FileVideo className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{videoFile.name}</p>
-                <p className="text-sm text-gray-500">
-                  {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
-                </p>
-              </div>
-              {!isUploading && (
-                <Button variant="ghost" size="icon" onClick={cancelUpload}>
-                  <X className="w-5 h-5" />
-                </Button>
-              )}
-              {uploadComplete && (
-                <div className="bg-green-100 p-1 rounded-full">
-                  <Check className="w-5 h-5 text-green-600" />
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <Label htmlFor="title">Title (required)</Label>
-                <Input
-                  id="title"
-                  value={videoTitle}
-                  onChange={(e) => setVideoTitle(e.target.value)}
-                  placeholder="Add a title that describes your video"
-                  disabled={isUploading || uploadComplete}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            {isUploading && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Uploading...</span>
-                  <span>{uploadProgress}%</span>
-                </div>
-                <Progress value={uploadProgress} className="h-2" />
-              </div>
-            )}
-
-            <div className="flex justify-end gap-3">
-              {!uploadComplete && (
-                <>
-                  <Button onClick={cancelUpload} disabled={uploadComplete}>
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleUpload}
-                    disabled={
-                      isUploading || !videoTitle.trim() || uploadComplete
-                    }
-                  >
-                    {isUploading ? "Uploading..." : "Upload"}
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
+    <div className={`max-w-xl mx-auto mt-8 p-6 rounded-lg shadow transition-colors duration-300 ${theme === 'dark' ? 'bg-zinc-900 text-white' : 'bg-white text-black'}`}>
+      <h2 className="text-2xl font-bold mb-4">Upload Video</h2>
+      <div
+        className={dragAreaClass}
+        onClick={() => fileInputRef.current?.click()}
+        onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
+        onDragLeave={e => { e.preventDefault(); setIsDragOver(false); }}
+        onDrop={e => {
+          e.preventDefault();
+          setIsDragOver(false);
+          if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handlefilechange({ target: { files: e.dataTransfer.files } } as any);
+          }
+        }}
+      >
+        <FileVideo className="w-10 h-10 mb-2 text-blue-500" />
+        <span className="font-medium mb-1">Drag & drop your video here</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">or click to select a file</span>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="video/*"
+          className="hidden"
+          onChange={handlefilechange}
+        />
+      </div>
+      {videoFile && (
+        <div className="mt-4 space-y-2">
+          <Label className="block text-sm font-medium mb-1">Video Title</Label>
+          <Input
+            value={videoTitle}
+            onChange={e => setVideoTitle(e.target.value)}
+            className="w-full bg-gray-50 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 text-black dark:text-white"
+            placeholder="Enter video title"
+          />
+          <Label className="block text-sm font-medium mb-1 mt-2">Description</Label>
+          <textarea
+            id="videoDescription"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="Describe your video (optional)"
+            className="w-full min-h-[80px] rounded-md border border-[var(--border)] bg-[var(--muted)] text-[var(--card-foreground)] p-2 focus-visible:ring-2 focus-visible:ring-[var(--primary)] transition-colors"
+            maxLength={1000}
+          />
+        </div>
+      )}
+      {isUploading && (
+        <div className="mt-4">
+          <Progress value={uploadProgress} className="h-2 bg-gray-200 dark:bg-zinc-800" />
+          <div className="text-xs mt-1 text-gray-600 dark:text-gray-400">Uploading... {uploadProgress}%</div>
+        </div>
+      )}
+      <div className="flex gap-2 mt-6">
+        <Button onClick={handleUpload} disabled={isUploading || !videoFile || !videoTitle.trim()}>
+          <Upload className="mr-2" /> Upload
+        </Button>
+        {isUploading && (
+          <Button variant="outline" onClick={cancelUpload}>
+            <X className="mr-2" /> Cancel
+          </Button>
+        )}
+        {uploadComplete && (
+          <Button variant="outline" onClick={resetForm}>
+            <Check className="mr-2" /> Done
+          </Button>
         )}
       </div>
     </div>

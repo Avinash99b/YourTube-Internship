@@ -1,71 +1,115 @@
+import React, { useState, useEffect } from "react";
 import ChannelHeader from "@/components/ChannelHeader";
 import Channeltabs from "@/components/Channeltabs";
 import ChannelVideos from "@/components/ChannelVideos";
 import VideoUploader from "@/components/VideoUploader";
 import { useUser } from "@/lib/AuthContext";
-import { notFound } from "next/navigation";
 import { useRouter } from "next/router";
-import React from "react";
+import axiosInstance from "@/lib/axiosinstance";
+import {useTheme} from "@/lib/ThemeContext";
 
-const index = () => {
+const ChannelPage = () => {
   const router = useRouter();
   const { id } = router.query;
   const { user } = useUser();
-  // const user: any = {
-  //   id: "1",
-  //   name: "John Doe",
-  //   email: "john@example.com",
-  //   image: "https://github.com/shadcn.png?height=32&width=32",
-  // };
-  try {
-    let channel = user;
-   
-    const videos = [
-      {
-        _id: "1",
-        videotitle: "Amazing Nature Documentary",
-        filename: "nature-doc.mp4",
-        filetype: "video/mp4",
-        filepath: "/videos/nature-doc.mp4",
-        filesize: "500MB",
-        videochanel: "Nature Channel",
-        Like: 1250,
-        views: 45000,
-        uploader: "nature_lover",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        _id: "2",
-        videotitle: "Cooking Tutorial: Perfect Pasta",
-        filename: "pasta-tutorial.mp4",
-        filetype: "video/mp4",
-        filepath: "/videos/pasta-tutorial.mp4",
-        filesize: "300MB",
-        videochanel: "Chef's Kitchen",
-        Like: 890,
-        views: 23000,
-        uploader: "chef_master",
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-      },
-    ];
-    return (
-      <div className="flex-1 min-h-screen bg-white">
-        <div className="max-w-full mx-auto">
-          <ChannelHeader channel={channel} user={user} />
-          <Channeltabs />
-          <div className="px-4 pb-8">
-            <VideoUploader channelId={id} channelName={channel?.channelname} />
+  const [activeTab, setActiveTab] = useState("videos");
+  const [downloadedVideos, setDownloadedVideos] = useState<any[]>([]);
+  const [videos, setVideos] = useState<any[]>([]);
+  const {theme} = useTheme();
+  const [showUploader, setShowUploader] = useState(false);
+
+  useEffect(() => {
+    // Fetch channel videos (replace with real API call if needed)
+    setVideos([
+      // ...mock videos or fetch from backend...
+    ]);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "downloads" && user?._id) {
+      axiosInstance
+        .get(`/video/downloads/user?userId=${user._id}`)
+        .then((res) => setDownloadedVideos(res.data.downloadedVideos || []))
+        .catch(() => setDownloadedVideos([]));
+    }
+  }, [activeTab, user]);
+
+  // Handler for successful upload
+  const handleUploadSuccess = () => {
+    setShowUploader(false);
+    // Optionally, refresh videos list here
+    // fetchVideos();
+  };
+
+  return (
+    <div className={`flex-1 min-h-screen transition-colors duration-300 ${theme === "dark" ? "bg-[var(--card)] text-[var(--card-foreground)]" : "bg-white text-black"}`}>
+      <div className="max-w-full mx-auto">
+        <ChannelHeader channel={user} user={user} />
+        {/* Upload Video Button - only show if user is channel owner */}
+
+          <div className="flex justify-end px-4 mt-4">
+            <button
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+              onClick={() => setShowUploader(true)}
+            >
+              Upload Video
+            </button>
           </div>
-          <div className="px-4 pb-8">
-            <ChannelVideos videos={videos} />
+        {/* VideoUploader Modal */}
+        {showUploader && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded shadow-lg w-full max-w-md relative">
+              <button
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+                onClick={() => setShowUploader(false)}
+              >
+                &times;
+              </button>
+              <VideoUploader onSuccess={handleUploadSuccess} channelId={id} uploaderId={user?._id} />
+            </div>
           </div>
+        )}
+        <Channeltabs activeTab={activeTab} setActiveTab={setActiveTab} />
+        <div className="px-4 pb-8">
+          {activeTab === "videos" && <ChannelVideos videos={videos} />}
+          {activeTab === "downloads" && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Downloaded Videos</h2>
+              {downloadedVideos.length === 0 ? (
+                <div className="text-center py-12 text-gray-600 dark:text-gray-400">
+                  No videos downloaded yet.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {downloadedVideos.map((video: any) => (
+                    <div key={video._id} className="border rounded p-2 bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-700">
+                      <div className="font-semibold">
+                        {video.videotitle || video.title}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                        {video.description}
+                      </div>
+                      {/*<a*/}
+                      {/*  href={`${*/}
+                      {/*    process.env.NEXT_PUBLIC_BACKEND_URL ||*/}
+                      {/*    "http://localhost:5000"*/}
+                      {/*  }/uploads/${video.filename}`}*/}
+                      {/*  className="text-blue-600 dark:text-blue-400 underline"*/}
+                      {/*  target="_blank"*/}
+                      {/*  rel="noopener noreferrer"*/}
+                      {/*>*/}
+                      {/*  Download*/}
+                      {/*</a>*/}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
-    );
-  } catch (error) {
-    console.error("Error fetching channel data:", error);
-   
-  }
+    </div>
+  );
 };
 
-export default index;
+export default ChannelPage;

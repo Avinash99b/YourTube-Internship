@@ -76,7 +76,7 @@ export default function LikedVideosContent() {
       </div>
     );
   }
-  const videos = "/video/vdo.mp4";
+    console.log(likedVideos)
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -90,7 +90,7 @@ export default function LikedVideosContent() {
       <div className="space-y-4">
         {likedVideos.map((item) => (
           <div key={item._id} className="flex gap-4 group">
-            <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
+            <Link href={`/watch/${item._id}`} className="flex-shrink-0">
               <div className="relative w-40 aspect-video bg-gray-100 rounded overflow-hidden">
                 <video
                   src={`${process.env.BACKEND_URL}/${item.videoid?.filepath}`}
