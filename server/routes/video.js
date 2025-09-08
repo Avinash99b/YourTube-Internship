@@ -10,5 +10,4 @@ routes.get("/getall", getallvideo);
 routes.get("/download/:id", downloadVideo); // Download video by id
 routes.get("/downloads/user", authenticate, getDownloadedVideos); // Get user's downloaded videos
 routes.get("/info/:id", getVideoById); // Get video info by id
-
 export default routes;

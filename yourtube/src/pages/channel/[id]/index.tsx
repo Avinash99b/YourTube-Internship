@@ -91,7 +91,7 @@ const ChannelPage = () => {
                       </div>
                       {/*<a*/}
                       {/*  href={`${*/}
-                      {/*    process.env.NEXT_PUBLIC_BACKEND_URL ||*/}
+                      {/*    process.env.NEXT_PUBLIC_NEXT_PUBLIC_BACKEND_URL ||*/}
                       {/*    "http://localhost:5000"*/}
                       {/*  }/uploads/${video.filename}`}*/}
                       {/*  className="text-blue-600 dark:text-blue-400 underline"*/}

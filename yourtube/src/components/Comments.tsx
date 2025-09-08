@@ -16,6 +16,9 @@ interface Comment {
     commentbody: string;
     usercommented: string;
     commentedon: string;
+    location: string;
+    like_count: number;
+    dislike_count: number;
 }
 
 // Define CommentProps for the Comment component

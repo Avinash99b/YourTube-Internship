@@ -9,7 +9,7 @@ export default function VideoCard({ video }: any) {
       <div className="space-y-3">
         <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 transition-colors duration-300">
           <video
-            src={`${process.env.BACKEND_URL}/${video?.filepath}`}
+            src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/${encodeURIComponent(video.filepath)}`}
             className="object-cover group-hover:scale-105 transition-transform duration-200 w-full h-full"
           />
           <div className="absolute bottom-2 right-2 bg-black/80 dark:bg-white/80 text-white dark:text-black text-xs px-1 rounded shadow">

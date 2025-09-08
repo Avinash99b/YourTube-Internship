@@ -5,6 +5,8 @@ import { useUser } from "@/lib/AuthContext";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 import axiosInstance from "@/lib/axiosinstance";
 import { FaPlay, FaPause, FaForward, FaBackward, FaCommentDots, FaTimes, FaStepForward } from "react-icons/fa";
+import "dotenv/config";
+import ReactPlayer from "react-player";
 
 interface CustomVideoPlayerProps {
   video: {
@@ -27,6 +29,7 @@ export default function CustomVideoPlayer({
 }: CustomVideoPlayerProps & { showWalkthrough?: boolean; onDismissWalkthrough?: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const { user } = useUser();
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [watchSeconds, setWatchSeconds] = useState(0);
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -190,8 +193,8 @@ export default function CustomVideoPlayer({
         }
       }
     };
-    videoRef.current.addEventListener("pause", logOnPause);
-    videoRef.current.addEventListener("ended", logOnPause);
+    videoRef.current?.addEventListener("pause", logOnPause);
+    videoRef.current?.addEventListener("ended", logOnPause);
     return () => {
       if (interval) clearInterval(interval);
       if (videoRef.current) {
@@ -252,23 +255,49 @@ export default function CustomVideoPlayer({
     return `${m}:${s}`;
   };
 
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    const fetchVideo = async () => {
+      if (!video?.filepath) return;
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/${encodeURIComponent(video.filepath)}`,
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
+        );
+        if (!res.ok) throw new Error("Failed to fetch video");
+        const blob = await res.blob();
+        objectUrl = URL.createObjectURL(blob);
+        setVideoUrl(objectUrl);
+      } catch (e) {
+        setVideoUrl(null);
+      }
+    };
+    fetchVideo();
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      setVideoUrl(null);
+    };
+  }, [video?.filepath]);
+
   return (
     <div
       className="relative w-full aspect-video bg-black dark:bg-zinc-900 transition-colors duration-300 rounded-lg overflow-hidden group"
       onMouseMove={handleShowControls}
       onClick={handleShowControls}
     >
-      {/* Video element */}
+      {/* Video element replaced with ReactPlayer */}
       <video
         ref={videoRef}
-        src={process.env.NEXT_PUBLIC_BACKEND_URL + "/" + video?.filepath}
-        className="w-full h-full object-contain bg-black dark:bg-zinc-900"
         controls={false}
-        onClick={e => e.preventDefault()}
-        tabIndex={0}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-      />
+        className="w-full h-full bg-black"
+        src={videoUrl || undefined}
+      >
+        {/* fallback source for browsers that don't support JS */}
+        {/* <source src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/${encodeURIComponent(video.filepath)}`} type="video/mp4" /> */}
+      </video>
       {/* Tap zones for gestures */}
       <div className="absolute inset-0 flex z-20">
         <button

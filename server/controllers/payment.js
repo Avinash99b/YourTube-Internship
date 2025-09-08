@@ -9,7 +9,7 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-const PLAN_DETAILS = {
+export const PLAN_DETAILS = {
   bronze: { amount: 10, duration: 30, watchLimit: 7 },
   silver: { amount: 50, duration: 30, watchLimit: 10 },
   gold: { amount: 100, duration: 30, watchLimit: null },

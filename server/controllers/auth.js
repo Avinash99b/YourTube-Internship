@@ -230,7 +230,16 @@ export const verifyOtp = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
-
+export const getWatchTime = async (userId)=>{
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    let watchTimeToday = 0;
+    const historyToday = await history.find({ viewer: userId, createdAt: { $gte: today } });
+    if (historyToday && historyToday.length > 0) {
+        watchTimeToday = historyToday.reduce((sum, h) => sum + (h.watchTime || 0), 0);
+    }
+    return watchTimeToday
+}
 export const updateprofile = async (req, res) => {
   const { id: _id } = req.params;
   const { channelname, description } = req.body;
@@ -271,11 +280,7 @@ export const getUserUsage = async (req, res) => {
       return dDate.getTime() === today.getTime();
     }).length;
     // Watch time today (sum from history)
-    let watchTimeToday = 0;
-    const historyToday = await history.find({ viewer: userId, createdAt: { $gte: today } });
-    if (historyToday && historyToday.length > 0) {
-      watchTimeToday = historyToday.reduce((sum, h) => sum + (h.watchTime || 0), 0);
-    }
+    const watchTimeToday = await getWatchTime(userId)
     res.json({ downloadsToday, watchTimeToday });
   } catch (error) {
     res.status(500).json({ message: "Error fetching usage" });

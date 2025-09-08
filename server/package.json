@@ -20,6 +20,8 @@
     "express-fileupload": "^1.5.1",
     "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
+    "mime": "^4.0.7",
+    "mime-types": "^3.0.1",
     "mongoose": "^8.16.0",
     "multer": "^2.0.1"
   },
