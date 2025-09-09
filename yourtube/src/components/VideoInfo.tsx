@@ -150,7 +150,7 @@ const VideoInfo = ({video}: any) => {
                 link.click();
                 link.parentNode?.removeChild(link);
             }
-        } catch (error) {
+        } catch (error:any) {
             const response = error.response;
             if (response.status === 403) {
                 // Backend returns a message for download limit

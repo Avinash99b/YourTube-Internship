@@ -151,7 +151,7 @@ export default function ProfilePage() {
         <div>Watch time today: {Math.floor(watchTimeToday/60)} min {watchTimeToday%60}s / {planLimit.watch ? `${Math.floor(planLimit.watch/60)} min` : "Unlimited"}</div>
       </div>
       <div className="mb-4 flex gap-2">
-        <Button href="/channel/[id]">Go to My Channel</Button>
+        <Button onClick={()=>window.location.href=`/channel/${user.channelname}`}>Go to My Channel</Button>
         <Button variant="outline" onClick={handleUpgradeClick} disabled={plan === "gold"}>Upgrade Plan</Button>
       </div>
       {success && <div className="text-green-600 mb-2">{success}</div>}

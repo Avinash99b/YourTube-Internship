@@ -1,4 +1,5 @@
-import VideoCard from "./videocard";
+import VideoCard from "@/components/videocard";
+
 export default function ChannelVideos({ videos }: any) {
   if (videos.length === 0) {
     return (

@@ -250,7 +250,7 @@ const Comment = ({comment, triggerCommentReload}: CommentProps) => {
 
 
 // Utility to get location details using browser geolocation and OpenStreetMap
-async function getLocationDetails() {
+async function getLocationDetails():Promise<{state:string,city:string,pincode:string,error?:string}> {
   return new Promise((resolve) => {
     if (!navigator.geolocation) {
       resolve({ state: "", city: "", pincode: "", error: "Geolocation not supported" });
