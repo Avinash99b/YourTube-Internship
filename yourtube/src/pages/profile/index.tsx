@@ -3,6 +3,7 @@ import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/lib/ThemeContext";
+import { getAllVideosFromDb, getVideoBlobFromDb, deleteVideoFromDb } from "@/lib/downloadsDb";
 
 const PLAN_LABELS: Record<string, string> = {
   free: "Free",
@@ -33,6 +34,8 @@ export default function ProfilePage() {
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [downloads, setDownloads] = useState<(any & { blob: Blob })[]>([]);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?._id) return;
@@ -48,6 +51,11 @@ export default function ProfilePage() {
       })
       .finally(() => setLoading(false));
   }, [user]);
+
+  // Fetch downloads from browser storage
+  useEffect(() => {
+    getAllVideosFromDb().then(setDownloads);
+  }, []);
 
   const handleUpgradeClick = () => {
     setUpgradeOpen(true);
@@ -122,6 +130,29 @@ export default function ProfilePage() {
     }
   };
 
+  // Download video from browser storage
+  const handleBrowserDownload = async (id: string, filename: string) => {
+    setDownloadingId(id);
+    const blob = await getVideoBlobFromDb(id);
+    if (blob) {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    }
+    setDownloadingId(null);
+  };
+
+  // Remove video from browser storage
+  const handleRemoveDownload = async (id: string) => {
+    await deleteVideoFromDb(id);
+    setDownloads(await getAllVideosFromDb());
+  };
+
   if (!user) return <div className="p-8">Please log in to view your profile.</div>;
 
   const plan = user.plan || "free";
@@ -149,6 +180,53 @@ export default function ProfilePage() {
         <h2 className="font-semibold mb-2">Usage Quotas</h2>
         <div>Downloads today: {downloadsToday} / {planLimit.downloads === Infinity ? "Unlimited" : planLimit.downloads}</div>
         <div>Watch time today: {Math.floor(watchTimeToday/60)} min {watchTimeToday%60}s / {planLimit.watch ? `${Math.floor(planLimit.watch/60)} min` : "Unlimited"}</div>
+      </div>
+      {/* Downloads section */}
+      <div className="mb-4">
+        <h2 className="font-semibold mb-2">Downloads (Browser Storage)</h2>
+        {downloads.length === 0 ? (
+          <div className="text-gray-500">No videos downloaded in browser.</div>
+        ) : (
+          <ul className="space-y-2">
+            {downloads.map((v) => (
+              <li key={v.id} className="border rounded p-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <div>
+                  <div className="font-semibold">{v.title}</div>
+                  <div className="text-xs text-gray-500">{v.channel} • {new Date(v.createdAt).toLocaleString()}</div>
+                  <div className="text-xs text-gray-400 line-clamp-1">{v.description}</div>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <button
+                    className="px-2 py-1 border rounded text-xs"
+                    onClick={() => handleBrowserDownload(v.id, v.filename)}
+                    disabled={downloadingId === v.id}
+                  >
+                    {downloadingId === v.id ? "Preparing..." : "Download"}
+                  </button>
+                  <button
+                    className="px-2 py-1 border rounded text-xs text-red-600"
+                    onClick={() => handleRemoveDownload(v.id)}
+                  >
+                    Remove
+                  </button>
+                  <button
+                    className="px-2 py-1 border rounded text-xs"
+                    onClick={async () => {
+                      const blob = await getVideoBlobFromDb(v.id);
+                      if (blob) {
+                        const url = window.URL.createObjectURL(blob);
+                        window.open(url, '_blank');
+                        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+                      }
+                    }}
+                  >
+                    Play
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <div className="mb-4 flex gap-2">
         <Button onClick={()=>window.location.href=`/channel/${user.channelname}`}>Go to My Channel</Button>

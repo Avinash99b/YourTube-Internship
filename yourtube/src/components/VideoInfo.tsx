@@ -13,6 +13,7 @@ import {useUser} from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
 import {Dialog, DialogContent, DialogTitle, DialogDescription} from "./ui/dialog";
 import {useTheme} from "@/lib/ThemeContext";
+import { saveVideoToDb } from "@/lib/downloadsDb";
 
 // Add Razorpay type declaration
 declare global {
@@ -141,22 +142,23 @@ const VideoInfo = ({video}: any) => {
                 responseType: "blob"
             });
             if (response.status === 200 || response.status === 206) {
-                // Download the file
-                const url = window.URL.createObjectURL(new Blob([response.data]));
-                const link = document.createElement("a");
-                link.href = url;
-                link.setAttribute("download", video.filename || "video.mp4");
-                document.body.appendChild(link);
-                link.click();
-                link.parentNode?.removeChild(link);
+                // Save the file in browser storage (IndexedDB)
+                await saveVideoToDb({
+                    id: video._id,
+                    title: video.videotitle,
+                    filename: video.filename || "video.mp4",
+                    channel: video.videochanel,
+                    createdAt: video.createdAt,
+                    description: video.description,
+                }, response.data);
+                setDownloadError("Video saved to browser downloads! Go to your profile to access it.");
             }
         } catch (error:any) {
             const response = error.response;
-            if (response.status === 403) {
-                // Backend returns a message for download limit
+            if (response && response.status === 403) {
                 setDownloadError("Free users can only download one video per day. Upgrade to premium for unlimited downloads.");
                 setShowUpgrade(true);
-            } else if (response.status === 404) {
+            } else if (response && response.status === 404) {
                 setDownloadError("Video not found or user not found.");
             } else {
                 setDownloadError("Download failed. Please try again.");

@@ -32,7 +32,8 @@ app.get("/uploads/:filename", authenticate,async (req, res) => {
     //Check if time still left for watch to user
     const user = await users.findById(req.user.id)
     const userWatchTime = await getWatchTime(user._id)
-    if((userWatchTime/60) >=PLAN_DETAILS[user.plan].watchLimit){
+    console.log(userWatchTime)
+    if(PLAN_DETAILS[user.plan].watchLimit!=null && (userWatchTime/60) >=PLAN_DETAILS[user.plan].watchLimit){
         return res.status(403).send("Limit Exceeded.")
     }
     try {

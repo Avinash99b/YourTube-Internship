@@ -2,15 +2,66 @@
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback } from "./ui/avatar";
+import React, { useEffect, useState, useRef } from "react";
 
 export default function VideoCard({ video }: any) {
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    const fetchVideo = async () => {
+      if (!video?.filepath) return;
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/${encodeURIComponent(video.filepath)}`,
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
+        );
+        if (!res.ok) throw new Error("Failed to fetch video");
+        const blob = await res.blob();
+        objectUrl = URL.createObjectURL(blob);
+        setVideoUrl(objectUrl);
+      } catch (e) {
+        setVideoUrl(null);
+      }
+    };
+    fetchVideo();
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      setVideoUrl(null);
+    };
+  }, [video?.filepath]);
+
+  const handleMouseEnter = () => {
+    if (videoRef.current) {
+      videoRef.current.play();
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  };
+
   return (
     <Link href={`/watch/${video?._id}`} className="group">
       <div className="space-y-3">
-        <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 transition-colors duration-300">
+        <div
+          className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 transition-colors duration-300"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
           <video
-            src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/${encodeURIComponent(video.filepath)}`}
+            ref={videoRef}
+            src={videoUrl || undefined}
             className="object-cover group-hover:scale-105 transition-transform duration-200 w-full h-full"
+            muted
+            preload="metadata"
           />
           <div className="absolute bottom-2 right-2 bg-black/80 dark:bg-white/80 text-white dark:text-black text-xs px-1 rounded shadow">
             10:24
