@@ -2,10 +2,9 @@ services:
   # 🔹 Backend (Express API)
   - type: web
     name: yourtube-backend
-    env: node
     rootDir: server
     buildCommand: npm install
-    startCommand: node server.js
+    startCommand: node index.js
     plan: free
     envVars:
       - key: NODE_ENV
@@ -15,9 +14,8 @@ services:
   # 🔹 Frontend (Next.js or React)
   - type: web
     name: yourtube-frontend
-    env: node
     rootDir: yourtube
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --save-dev typescript && npm install && npm run build
     startCommand: npm start
     plan: free
     envVars:
