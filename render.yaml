@@ -1,0 +1,29 @@
+services:
+  # 🔹 Backend (Express API)
+  - type: web
+    name: yourtube-backend
+    env: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node server.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+    runtime: node
+
+  # 🔹 Frontend (Next.js or React)
+  - type: web
+    name: yourtube-frontend
+    env: node
+    rootDir: yourtube
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Point frontend to backend
+      - key: API_URL
+        value: https://yourtube-backend.onrender.com
+    runtime: node
