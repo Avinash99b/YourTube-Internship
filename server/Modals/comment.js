@@ -14,7 +14,6 @@ const commentschema = mongoose.Schema(
     commentbody: { type: String },
     usercommented: { type: String },
     commentedon: { type: Date, default: Date.now },
-    translated_body: { type: String },
     like_count: { type: Number, default: 0 },
     dislike_count: { type: Number, default: 0 },
     location: { type: String, default: "Unknown" }, // Added location field

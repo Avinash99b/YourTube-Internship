@@ -49,8 +49,8 @@ export default function VideoCard({ video }: any) {
   };
 
   return (
-    <Link href={`/watch/${video?._id}`} className="group">
-      <div className="space-y-3">
+    <Link href={`/watch/${video?._id}`} className="group block">
+      <div className="space-y-3 p-2 sm:p-0">
         <div
           className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 transition-colors duration-300"
           onMouseEnter={handleMouseEnter}
@@ -67,16 +67,16 @@ export default function VideoCard({ video }: any) {
             10:24
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 min-w-0">
           <Avatar className="w-9 h-9 flex-shrink-0">
             <AvatarFallback>{video?.videochanel[0]}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            <h3 className="font-medium text-sm sm:text-base line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
               {video?.videotitle}
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{video?.videochanel}</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1 truncate">{video?.videochanel}</p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
               {video?.views.toLocaleString()} views •{" "}
               {formatDistanceToNow(new Date(video?.createdAt))} ago
             </p>

@@ -304,16 +304,25 @@ export default function CustomVideoPlayer({
           className="w-1/3 h-full bg-transparent focus:outline-none active:bg-white/10 transition-colors"
           aria-label="Rewind"
           onClick={() => handleZoneTap("left")}
+          onTouchStart={e => { e.preventDefault(); }}
+          onTouchEnd={e => { e.preventDefault(); handleZoneTap("left"); }}
+          style={{ touchAction: "manipulation" }}
         />
         <button
           className="w-1/3 h-full bg-transparent focus:outline-none active:bg-white/10 transition-colors"
           aria-label="Play/Pause/Next"
           onClick={() => handleZoneTap("center")}
+          onTouchStart={e => { e.preventDefault(); }}
+          onTouchEnd={e => { e.preventDefault(); handleZoneTap("center"); }}
+          style={{ touchAction: "manipulation" }}
         />
         <button
           className="w-1/3 h-full bg-transparent focus:outline-none active:bg-white/10 transition-colors"
           aria-label="Forward/Close"
           onClick={() => handleZoneTap("right")}
+          onTouchStart={e => { e.preventDefault(); }}
+          onTouchEnd={e => { e.preventDefault(); handleZoneTap("right"); }}
+          style={{ touchAction: "manipulation" }}
         />
       </div>
       {/* Feedback overlay with icons */}

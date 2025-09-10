@@ -9,10 +9,16 @@ interface LocationData {
   error?: string;
 }
 
-const LocationContext = createContext<LocationData>({ loading: true });
+interface LocationContextType extends LocationData {
+  currentState?: string;
+  setCurrentState: (state: string) => void;
+}
+
+const LocationContext = createContext<LocationContextType>({ loading: true, setCurrentState: () => {} });
 
 export const LocationProvider = ({ children }: { children: ReactNode }) => {
   const [location, setLocation] = useState<LocationData>({ loading: true });
+  const [currentState, setCurrentState] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     // Example: Use a public IP geolocation API (replace with your preferred API)
@@ -26,6 +32,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
           city: data.city,
           loading: false,
         });
+        setCurrentState(data.region); // Set detected state as default
       } catch (err) {
         setLocation({ loading: false, error: "Failed to fetch location" });
       }
@@ -34,11 +41,10 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <LocationContext.Provider value={location}>
+    <LocationContext.Provider value={{ ...location, currentState, setCurrentState }}>
       {children}
     </LocationContext.Provider>
   );
 };
 
 export const useLocation = () => useContext(LocationContext);
-

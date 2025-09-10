@@ -26,12 +26,14 @@ const ChannelPage = () => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === "downloads" && user?._id) {
-      axiosInstance
-        .get(`/video/downloads/user?userId=${user._id}`)
-        .then((res) => setDownloadedVideos(res.data.downloadedVideos || []))
-        .catch(() => setDownloadedVideos([]));
-    }
+    setTimeout(()=>{
+        if (activeTab === "downloads" && user?._id) {
+            axiosInstance
+                .get(`/video/downloads/user?userId=${user._id}`)
+                .then((res) => setDownloadedVideos(res.data.downloadedVideos || []))
+                .catch(() => setDownloadedVideos([]));
+        }
+    },1000)
   }, [activeTab, user]);
 
   // Handler for successful upload
@@ -71,7 +73,7 @@ const ChannelPage = () => {
         )}
         <Channeltabs activeTab={activeTab} setActiveTab={setActiveTab} />
         <div className="px-4 pb-8">
-          {activeTab === "videos" && <ChannelVideos videos={videos} />}
+          {activeTab === "videos" && <ChannelVideos channelname={user?.channelname} />}
           {activeTab === "downloads" && (
             <div>
               <h2 className="text-xl font-semibold mb-4">Downloaded Videos</h2>

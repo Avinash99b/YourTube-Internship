@@ -6,9 +6,10 @@ import type {AppProps} from "next/app";
 import {UserProvider} from "@/lib/AuthContext";
 import {ThemeProvider} from "@/lib/ThemeContext";
 import {LocationProvider} from "@/lib/LocationContext";
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
 import {useUser} from "@/lib/AuthContext";
 import {toast} from "sonner";
+import {useRouter} from "next/router";
 
 function PersistentWatchLimitToast() {
     const {isWatchTimeExceeded} = useUser();
@@ -29,18 +30,31 @@ function PersistentWatchLimitToast() {
 }
 
 export default function App({Component, pageProps}: AppProps) {
+    // Sidebar open state for mobile
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const router = useRouter();
+    // Close sidebar on route change (mobile)
+    useEffect(() => {
+        const handleRouteChange = () => setSidebarOpen(false);
+        router.events.on("routeChangeStart", handleRouteChange);
+        return () => {
+            router.events.off("routeChangeStart", handleRouteChange);
+        };
+    }, [router]);
     return (
         <UserProvider>
             <LocationProvider>
                 <ThemeProvider>
-                    <div className="min-h-screen">
+                    <div className="min-h-screen flex flex-col">
                         <title>Your-Tube Clone</title>
-                        <Header/>
+                        <Header onMenuClick={() => setSidebarOpen(true)} />
                         <Toaster/>
                         <PersistentWatchLimitToast/>
-                        <div className="flex">
-                            <Sidebar/>
-                            <Component {...pageProps} />
+                        <div className="flex-1 flex flex-col md:flex-row">
+                            <Sidebar mobileOpen={sidebarOpen} setMobileOpen={setSidebarOpen} />
+                            <main className="flex-1 p-2 md:p-4 w-full">
+                                <Component {...pageProps} />
+                            </main>
                         </div>
                     </div>
                 </ThemeProvider>

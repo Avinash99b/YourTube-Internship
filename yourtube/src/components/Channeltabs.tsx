@@ -18,7 +18,7 @@ const Channeltabs = ({
 }) => {
 	return (
 		<div className="border-b border-gray-200 dark:border-zinc-700 px-4 bg-white dark:bg-zinc-900 transition-colors duration-300">
-			<div className="flex gap-8 overflow-x-auto">
+			<div className="flex gap-3 sm:gap-8 overflow-x-auto">
 				{tabs.map((tab) => (
 					<Button
 						key={tab.id}

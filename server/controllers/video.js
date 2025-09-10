@@ -1,5 +1,6 @@
 import video from "../Modals/video.js";
 import users from "../Modals/Auth.js";
+import history from "../Modals/history.js";
 import path from "path";
 import fs from "fs";
 
@@ -26,7 +27,7 @@ export const uploadvideo = async (req, res) => {
                 // ------------------------
                 filetype: req.file.mimetype,
                 filesize: req.file.size,
-                videochanel: req.body.videochanel,
+                videochanel: req.user.channelname,
                 uploader: req.body.uploader,
                 description: req.body.description || undefined,
             });
@@ -135,9 +136,49 @@ export const getVideoById = async (req, res) => {
     if (!vid) {
       return res.status(404).json({ message: "Video not found" });
     }
-    return res.status(200).json(vid);
+
+      //Increase view count in db
+      await video.findByIdAndUpdate(id, { $inc: { views: 1 } });
+      return res.status(200).json(vid);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Error fetching video info" });
+  }
+};
+
+export const getChannelVideos = async (req, res) => {
+  try {
+    const { channelname } = req.params;
+    const videos = await video.find({ videochanel: channelname });
+    return res.status(200).json(videos);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error fetching channel videos" });
+  }
+};
+
+export const deleteChannelVideo = async (req, res) => {
+  try {
+    const { channelname, videoId } = req.params;
+    // Only channel owner can delete
+    if (!req.user || req.user.channelname !== channelname) {
+      return res.status(403).json({ message: "Unauthorized: Only channel owner can delete videos." });
+    }
+    const vid = await video.findOne({ _id: videoId, videochanel: channelname });
+    if (!vid) {
+      return res.status(404).json({ message: "Video not found for this channel." });
+    }
+    // Delete video file from disk
+    const filePath = path.resolve("uploads/" + vid.filepath);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    await video.deleteOne({ _id: videoId });
+    // Delete all history related to this video
+    await history.deleteMany({ videoid: videoId });
+    return res.status(200).json({ message: "Video and related history deleted successfully." });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error deleting video" });
   }
 };

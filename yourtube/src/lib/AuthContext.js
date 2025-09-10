@@ -3,7 +3,7 @@ import { useState, useEffect, useContext, createContext } from "react";
 import { auth } from "./firebase";
 import axiosInstance from "./axiosinstance";
 
-const UserContext = createContext();
+export const UserContext = createContext();
 
 const PLAN_LIMITS = {
   free: { downloads: 1, watch: 300 },
@@ -74,6 +74,7 @@ export const UserProvider = ({ children }) => {
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    localStorage.removeItem("userState");
     try {
       await signOut(auth);
     } catch (error) {

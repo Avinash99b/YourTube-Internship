@@ -9,7 +9,6 @@ router.post("/", async (req, res) => {
         const translation = await translate(text,targetLanguage)
         res.status(200).json({translation})
     }catch (e){
-        console.log(e)
         res.status(500).json({message:"Internal Server Error"})
     }
 });

@@ -8,19 +8,27 @@ import {useLocation} from "@/lib/LocationContext";
 import {useUser} from "@/lib/AuthContext";
 import {useRouter} from "next/router";
 import {User} from "@firebase/auth";
+import { useTheme } from "@/lib/ThemeContext";
 
 const southernStates = [
     "Tamil nadu",
     "Kerala",
     "Karnataka",
-    "Andhra",
+    "Andhra Pradesh",
     "Telangana",
+];
+
+// List of all Indian states and union territories
+const indianStates = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
 ];
 
 const LoginWithOtp: React.FC = () => {
     const {setUser} = useUser();
     const router = useRouter();
     const location = useLocation();
+    const { setCurrentState } = location;
+    const { theme } = useTheme();
     const [mobile, setMobile] = useState("");
     const [email, setEmail] = useState("");
     const [name, setName] = useState("");
@@ -38,7 +46,7 @@ const LoginWithOtp: React.FC = () => {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Prefer context state, fallback to manual
-    const state = location.state || manualState;
+    const state = manualState || location.state || "";
     const isSouthern = southernStates.map(s => s.toLowerCase()).includes((state || "").toLowerCase());
 
     // Google sign-in
@@ -91,8 +99,10 @@ const LoginWithOtp: React.FC = () => {
             });
             if (res.data.user && res.data.token) {
                 localStorage.setItem("token", res.data.token);
+                localStorage.setItem("userState", state); // Save user state on login
                 setUser(res.data.user);
                 router.push("/");
+                window.location.reload()
             } else {
                 setError("Invalid OTP");
             }
@@ -171,15 +181,34 @@ const LoginWithOtp: React.FC = () => {
                         type="text"
                         style={{marginBottom: 12}}
                     />
-                    {/* Show detected state, allow override if not found or user wants to change */}
-                    <Input
+                    {/* State selection: dropdown for India, text input otherwise */}
+                    {location.country === "India" ? (
+                      <select
+                        value={state}
+                        onChange={e => {
+                          setManualState(e.target.value);
+                          setCurrentState(e.target.value);
+                        }}
+                        className={`w-full rounded-md border px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${theme === "light" ? "bg-gray-50 text-gray-900 border-gray-200" : "bg-zinc-800 text-gray-100 border-zinc-700"}`}
+                        style={{marginBottom: 12}}
+                      >
+                        <option value="">Select State</option>
+                        {indianStates.map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <Input
                         placeholder="State"
-                        value={state || ""}
-                        onChange={e => setManualState(e.target.value)}
+                        value={state}
+                        onChange={e => {
+                          setManualState(e.target.value);
+                          setCurrentState(e.target.value);
+                        }}
                         type="text"
                         style={{marginBottom: 12}}
-                        disabled={!!location.state}
-                    />
+                      />
+                    )}
                     {!isSouthern && (
                         <Input
                             placeholder="Mobile number (required for non-southern states)"

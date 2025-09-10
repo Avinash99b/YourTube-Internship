@@ -34,7 +34,17 @@ const Comment = ({comment, triggerCommentReload}: CommentProps) => {
     const [commentBody, setCommentBody] = useState(comment.commentbody)
     const [showingTranslated, setShowingTranslated] = useState(false)
     const [translateLanguage, setTranslateLanguage] = useState<string>("en")
+    const [languages, setLanguages] = useState<{ code: string; name: string }[]>([]);
     const [commentReactionStatus, setCommentReactionStatus] = useState<null | "liked" | "disliked">(null)
+    const [translating, setTranslating] = useState(false);
+
+    useEffect(() => {
+        async function fetchLanguages() {
+            const langs = getGoogleTranslateLanguages();
+            setLanguages(langs);
+        }
+        fetchLanguages();
+    }, []);
 
     const handleEdit = (comment: Comment) => {
         setEditing((prevState) => !prevState);
@@ -71,6 +81,7 @@ const Comment = ({comment, triggerCommentReload}: CommentProps) => {
     }
 
     const translateComment = async () => {
+        setTranslating(true);
         try {
             const response = await axiosInstance.post('/translate', {
                 text: commentBody,
@@ -80,6 +91,8 @@ const Comment = ({comment, triggerCommentReload}: CommentProps) => {
             setShowingTranslated(true)
         } catch (e) {
             console.log(e)
+        } finally {
+            setTranslating(false);
         }
     }
 
@@ -136,112 +149,69 @@ const Comment = ({comment, triggerCommentReload}: CommentProps) => {
     }
     fetchReaction()
     return (
-        <div key={comment._id} className="flex gap-4 p-4 rounded-lg shadow-sm mb-2 transition-colors duration-300 bg-white dark:bg-zinc-900">
-            <Avatar className="w-10 h-10">
-                <AvatarImage src="/placeholder.svg?height=40&width=40" />
-                <AvatarFallback className="bg-gray-200 dark:bg-zinc-700 text-black dark:text-white">{comment.usercommented[0]}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <span className="font-medium text-sm text-black dark:text-white">
-                    {comment.usercommented}
-                  </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">{comment.location || "Unknown"}</span>
-                    <span className="text-xs text-gray-600 dark:text-gray-400 ml-2">
-                    {formatDistanceToNow(new Date(comment.commentedon))} ago
-                  </span>
+        <div className="flex flex-col sm:flex-row gap-3 py-3 border-b border-gray-200 dark:border-zinc-700">
+            <div className="flex-shrink-0 flex items-start">
+                <Avatar className="w-8 h-8 sm:w-10 sm:h-10">
+                    <AvatarFallback>{comment.usercommented[0]}</AvatarFallback>
+                </Avatar>
+            </div>
+            <div className="flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                  <span className="font-semibold text-xs sm:text-sm truncate">{comment.usercommented}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{formatDistanceToNow(new Date(comment.commentedon))} ago</span>
                 </div>
-                {editing ? (
-                    <div className="space-y-2">
-                        <Textarea
-                            value={editText}
-                            onChange={(e) => setEditText(e.target.value)}
-                            className="bg-gray-50 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 text-black dark:text-white"
-                        />
-                        <div className="flex gap-2 justify-end">
-                            <Button
-                                onClick={handleUpdateComment}
-                                disabled={!editText.trim()}
-                            >
-                                Save
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                onClick={() => {
-                                    setEditing(false);
-                                    setEditText("");
-                                }}
-                            >
-                                Cancel
-                            </Button>
+                <div className="text-sm sm:text-base mt-1 break-words whitespace-pre-line">
+                    {translating ? (
+                        <div className="animate-pulse bg-gray-200 dark:bg-zinc-700 h-6 w-2/3 rounded mb-2"></div>
+                    ) : (
+                        commentBody
+                    )}
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                    <select
+                        className="border rounded px-2 py-1 text-xs"
+                        value={translateLanguage}
+                        onChange={e => setTranslateLanguage(e.target.value)}
+                        aria-label="Select language to translate"
+                    >
+                        {languages.map(lang => (
+                            <option key={lang.code} value={lang.code}>{lang.name}</option>
+                        ))}
+                    </select>
+                    <Button size="sm" variant="ghost" onClick={() => reactToComment(true)} aria-pressed={commentReactionStatus === 'liked'}>
+                        <ThumbsUp className="w-4 h-4 mr-1" /> {comment.like_count}
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => reactToComment(false)} aria-pressed={commentReactionStatus === 'disliked'}>
+                        <ThumbsDown className="w-4 h-4 mr-1" /> {comment.dislike_count}
+                    </Button>
+                    {user && user._id === comment.userid && (
+                        <>
+                            <Button size="sm" variant="outline" onClick={() => handleEdit(comment)}>{editing ? 'Cancel' : 'Edit'}</Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleDelete(comment._id)}>Delete</Button>
+                        </>
+                    )}
+                    <Button size="sm" variant="outline" onClick={translateComment} disabled={translating}>
+                        {translating ? (
+                            <span className="flex items-center gap-1">
+                                <svg className="animate-spin h-4 w-4 mr-1 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                                Translating...
+                            </span>
+                        ) : (
+                            'Translate'
+                        )}
+                    </Button>
+                    {showingTranslated && (
+                        <Button size="sm" variant="ghost" onClick={() => { setCommentBody(comment.commentbody); setShowingTranslated(false); }}>Show Original</Button>
+                    )}
+                </div>
+                {editing && (
+                    <div className="mt-2 flex flex-col gap-2">
+                        <Textarea value={editText} onChange={e => setEditText(e.target.value)} className="w-full min-h-[60px]" />
+                        <div className="flex gap-2">
+                            <Button size="sm" variant="default" onClick={handleUpdateComment}>Save</Button>
+                            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>
                         </div>
                     </div>
-                ) : (
-                    <>
-                        {/*  Comment body*/}
-                        <p className="text-sm text-gray-800 dark:text-gray-200">{commentBody}</p>
-
-
-                        <div className="flex gap-2 mt-2 text-sm text-gray-500">
-
-                            {comment.userid === user?._id && (<>
-                                <button onClick={() => handleEdit(comment)}>
-                                    Edit
-                                </button>
-                                <button onClick={() => handleDelete(comment._id)}>
-                                    Delete
-                                </button>
-                            </>)}
-                            {showingTranslated ? <>
-                                <button onClick={() => {
-                                    setCommentBody(comment.commentbody);
-                                    setShowingTranslated(false)
-                                    setTranslateLanguage("en")
-                                }}>Show Original
-                                </button>
-                            </> : <button onClick={translateComment}>
-                                Translate to <select onChange={(e) => setTranslateLanguage(e.target.value)}
-                                                     defaultValue={"en"}>
-                                {getGoogleTranslateLanguages().map((language) => {
-                                    return <option value={language.code}>{language.name}</option>
-                                })}
-                            </select>
-                            </button>}
-                            {user?._id && (
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="rounded-l-full"
-                                        onClick={() => reactToComment(true)}
-                                    >
-                                        <ThumbsUp
-                                            className={`w-5 h-5 mr-2 ${
-                                                commentReactionStatus === "liked" ? "fill-black text-black" : ""
-                                            }`}
-                                        />
-                                        {comment.like_count.toLocaleString()}
-                                    </Button>
-                                    <div className="w-px h-6 bg-gray-300"/>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="rounded-r-full"
-                                        onClick={() => reactToComment(false)}
-                                    >
-                                        <ThumbsDown
-                                            className={`w-5 h-5 mr-2 ${
-                                                commentReactionStatus === "disliked" ? "fill-black text-black" : ""
-                                            }`}
-                                        />
-                                        {comment.dislike_count.toLocaleString()}
-                                    </Button>
-
-                                </div>
-                            )}
-                        </div>
-
-                    </>
                 )}
             </div>
         </div>

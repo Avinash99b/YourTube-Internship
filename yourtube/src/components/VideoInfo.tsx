@@ -5,7 +5,6 @@ import {
     Clock,
     Download,
     Share,
-    ThumbsDown,
     ThumbsUp,
 } from "lucide-react";
 import {formatDistanceToNow} from "date-fns";
@@ -28,11 +27,13 @@ const PLAN_DETAILS = [
     {key: "gold", label: "Gold", price: 100, desc: "Unlimited watch, unlimited downloads"},
 ];
 
+// Helper to get plan order
+const PLAN_ORDER = ["free", "bronze", "silver", "gold"];
+const getPlanIndex = (plan: string) => PLAN_ORDER.indexOf(plan || "free");
+
 const VideoInfo = ({video}: any) => {
     const [likes, setlikes] = useState(video.Like || 0);
-    const [dislikes, setDislikes] = useState(video.Dislike || 0);
     const [isLiked, setIsLiked] = useState(false);
-    const [isDisliked, setIsDisliked] = useState(false);
     const [showFullDescription, setShowFullDescription] = useState(false);
     const {user} = useUser();
     const [isWatchLater, setIsWatchLater] = useState(false);
@@ -45,29 +46,41 @@ const VideoInfo = ({video}: any) => {
 
     useEffect(() => {
         setlikes(video.Like || 0);
-        setDislikes(video.Dislike || 0);
         setIsLiked(false);
-        setIsDisliked(false);
         setIsWatchLater(false);
         setDownloadError("");
-        // Fetch user-specific video state
-        const fetchUserVideoState = async () => {
+        // Fetch liked videos and watch later status individually
+        const fetchLikedVideos = async () => {
             if (!user) return;
             try {
-                // Fetch like/dislike/watch later status
-                const [likeRes, watchLaterRes] = await Promise.all([
-                    axiosInstance.get(`/like/status/${video._id}?userId=${user._id}`),
-                    axiosInstance.get(`/watch/status/${video._id}?userId=${user._id}`),
-                ]);
-                setIsLiked(!!likeRes.data.liked);
-                setIsDisliked(!!likeRes.data.disliked);
+                const likedVideosRes = await axiosInstance.get(`/like/${user._id}`);
+                const likedVideoIds = likedVideosRes.data.map((item: any) => item.videoid?._id);
+                setIsLiked(likedVideoIds.includes(video._id));
+            } catch (err) {
+                // Ignore errors for status fetch
+            }
+        };
+        const fetchWatchLaterStatus = async () => {
+            if (!user) return;
+            try {
+                const watchLaterRes = await axiosInstance.get(`/watch/status/${video._id}?userId=${user._id}`);
                 setIsWatchLater(!!(watchLaterRes.data.watchLater ?? watchLaterRes.data.watchlater));
             } catch (err) {
                 // Ignore errors for status fetch
             }
         };
-        fetchUserVideoState();
+        fetchLikedVideos();
+        fetchWatchLaterStatus();
     }, [video, user]);
+
+    const refreshLikedVideos = async () => {
+        if (!user) return;
+        try {
+            const likedVideosRes = await axiosInstance.get(`/like/${user._id}`);
+            const likedVideoIds = likedVideosRes.data.map((item: any) => item.videoid?._id || item.videoid);
+            setIsLiked(likedVideoIds.includes(video._id));
+        } catch (err) {}
+    };
 
     useEffect(() => {
         const handleviews = async () => {
@@ -88,15 +101,16 @@ const VideoInfo = ({video}: any) => {
     const handleLike = async () => {
         if (!user) return;
         try {
-            await axiosInstance.post(`/like/${video._id}`, {
+            const res = await axiosInstance.post(`/like/${video._id}`, {
                 userId: user._id,
             });
-            // After toggling like, fetch the new status
-            const statusRes = await axiosInstance.get(`/like/status/${video._id}?userId=${user._id}`);
-            setIsLiked(!!statusRes.data.liked);
-            setIsDisliked(!!statusRes.data.disliked);
-            setlikes((prev: number) => statusRes.data.liked ? prev + (!isLiked ? 1 : 0) - (isLiked ? 1 : 0) : prev - (isLiked ? 1 : 0));
-            setDislikes((prev: number) => statusRes.data.disliked ? prev + (!isDisliked ? 1 : 0) - (isDisliked ? 1 : 0) : prev - (isDisliked ? 1 : 0));
+            if (res.data.liked) {
+                setlikes((prev: number) => prev + 1);
+            } else {
+                setlikes((prev: number) => Math.max(prev - 1, 0));
+            }
+            // Refresh liked videos to update isLiked state
+            await refreshLikedVideos();
         } catch (error) {
             console.log(error);
         }
@@ -109,22 +123,6 @@ const VideoInfo = ({video}: any) => {
             });
             // Accept both possible keys from backend
             setIsWatchLater(!!(res.data.watchLater ?? res.data.watchlater));
-        } catch (error) {
-            console.log(error);
-        }
-    };
-    const handleDislike = async () => {
-        if (!user) return;
-        try {
-            await axiosInstance.post(`/like/${video._id}`, {
-                userId: user._id,
-            });
-            // After toggling dislike, fetch the new status
-            const statusRes = await axiosInstance.get(`/like/status/${video._id}?userId=${user._id}`);
-            setIsLiked(!!statusRes.data.liked);
-            setIsDisliked(!!statusRes.data.disliked);
-            setlikes((prev: number) => statusRes.data.liked ? prev + (!isLiked ? 1 : 0) - (isLiked ? 1 : 0) : prev - (isLiked ? 1 : 0));
-            setDislikes((prev: number) => statusRes.data.disliked ? prev + (!isDisliked ? 1 : 0) - (isDisliked ? 1 : 0) : prev - (isDisliked ? 1 : 0));
         } catch (error) {
             console.log(error);
         }
@@ -167,8 +165,17 @@ const VideoInfo = ({video}: any) => {
             setIsDownloading(false);
         }
     };
+    // Only show upgrade if user is not on the highest plan
+    const userPlan = user?.plan || "free";
+    const userPlanIndex = getPlanIndex(userPlan);
+    const maxPlanIndex = PLAN_ORDER.length - 1;
+    const canUpgrade = userPlanIndex < maxPlanIndex;
+
     const handleUpgrade = async () => {
         if (!user) return;
+        // Prevent upgrading to same or lower plan
+        const selectedPlanIndex = getPlanIndex(selectedPlan);
+        if (selectedPlanIndex <= userPlanIndex) return;
         setIsUpgrading(true);
         try {
             const {data} = await axiosInstance.post("/payment/create-order", {plan: selectedPlan});
@@ -214,44 +221,42 @@ const VideoInfo = ({video}: any) => {
     return (
         <div
             className={`rounded-lg shadow p-4 transition-colors duration-300 ${theme === "light" ? "bg-white text-black" : "bg-zinc-900 text-white"}`}>
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
                 <Avatar className="w-12 h-12">
                     <AvatarFallback className={theme === "light" ? "bg-gray-200 text-black" : "bg-zinc-700 text-white"}>
                         {video?.videochanel?.[0]}
                     </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                    <h2 className="text-lg font-semibold line-clamp-2">{video?.videotitle}</h2>
+                    <h2 className="text-base sm:text-lg font-semibold line-clamp-2">{video?.videotitle}</h2>
                     <div className={`text-xs ${theme === "light" ? "text-gray-600" : "text-gray-400"}`}>
-                        {video?.videochanel} • {video?.views?.toLocaleString()} views
-                        • {formatDistanceToNow(new Date(video?.createdAt))} ago
+                        {video?.videochanel}  {video?.views?.toLocaleString()} views
+                         {formatDistanceToNow(new Date(video?.createdAt))} ago
                     </div>
                 </div>
-                <Button variant="outline" className="ml-2" onClick={() => {
+                <Button variant="outline" className="ml-0 sm:ml-2 w-full sm:w-auto" onClick={() => {
                     navigator.clipboard.writeText(window.location.href)
                 }}>
                     <Share className="w-4 h-4 mr-1"/> Share
                 </Button>
             </div>
-            <div className="flex gap-4 mb-4">
+            <div className="flex flex-wrap gap-2 sm:gap-4 mb-4 w-full">
                 <Button variant={isLiked ? "default" : "ghost"} onClick={handleLike} disabled={!user}
-                        aria-pressed={isLiked}>
+                        aria-pressed={isLiked} className="flex-1 min-w-[120px]">
                     <ThumbsUp className={isLiked ? "fill-white" : ""}/> {likes}
                 </Button>
-                <Button variant={isDisliked ? "default" : "ghost"} onClick={handleDislike} disabled={!user}
-                        aria-pressed={isDisliked}>
-                    <ThumbsDown className={isDisliked ? "fill-white" : ""}/> {dislikes}
-                </Button>
                 <Button variant={isWatchLater ? "default" : "outline"} onClick={handleWatchLater} disabled={!user}
-                        aria-pressed={isWatchLater}>
+                        aria-pressed={isWatchLater} className="flex-1 min-w-[120px]">
                     <Clock className={isWatchLater ? "fill-white" : ""}/> Watch Later
                 </Button>
-                <Button variant="outline" onClick={handleDownload} disabled={!user || isDownloading}>
+                <Button variant="outline" onClick={handleDownload} disabled={!user || isDownloading} className="flex-1 min-w-[120px]">
                     <Download className="w-4 h-4 mr-1"/> {isDownloading ? "Downloading..." : "Download"}
                 </Button>
-                <Button variant="outline" onClick={() => setShowUpgrade(true)} disabled={!user}>
-                    Upgrade
-                </Button>
+                {canUpgrade && (
+                    <Button variant="outline" onClick={() => setShowUpgrade(true)} disabled={!user} className="flex-1 min-w-[120px]">
+                        Upgrade
+                    </Button>
+                )}
             </div>
             {downloadError &&
                 <div className={theme === "light" ? "text-red-600 mb-2" : "text-red-400 mb-2"}>{downloadError}</div>}
@@ -269,6 +274,7 @@ const VideoInfo = ({video}: any) => {
         </span>
             </div>
             {/* Dialog for upgrade */}
+            {canUpgrade && (
             <Dialog open={showUpgrade} onOpenChange={setShowUpgrade}>
                 <DialogContent className={theme === "light" ? "bg-white text-black" : "bg-zinc-900 text-white"}>
                     <DialogTitle>Upgrade Plan</DialogTitle>
@@ -276,26 +282,35 @@ const VideoInfo = ({video}: any) => {
                         Choose a plan to unlock more features:
                     </DialogDescription>
                     <div className="flex flex-col gap-2 mt-4">
-                        {PLAN_DETAILS.map(plan => (
-                            <Button
-                                key={plan.key}
-                                variant={selectedPlan === plan.key ? "default" : "outline"}
-                                className={selectedPlan === plan.key ? (theme === "light" ? "bg-blue-600 text-white" : "bg-blue-500 text-white") : ""}
-                                onClick={() => setSelectedPlan(plan.key)}
-                            >
-                                {plan.label} - ₹{plan.price} <span
-                                className={theme === "light" ? "ml-2 text-xs text-gray-500" : "ml-2 text-xs text-gray-300"}>{plan.desc}</span>
-                            </Button>
-                        ))}
+                        {PLAN_DETAILS.map((plan, idx) => {
+                            const planIndex = getPlanIndex(plan.key);
+                            const isDisabled = planIndex <= userPlanIndex;
+                            return (
+                                <Button
+                                    key={plan.key}
+                                    variant={selectedPlan === plan.key ? "default" : "outline"}
+                                    className={
+                                        `${selectedPlan === plan.key ? (theme === "light" ? "bg-blue-600 text-white" : "bg-blue-500 text-white") : ""} ` +
+                                        (isDisabled ? "opacity-50 blur-[1.5px] pointer-events-none" : "")
+                                    }
+                                    onClick={() => !isDisabled && setSelectedPlan(plan.key)}
+                                    disabled={isDisabled}
+                                >
+                                    {plan.label} - 9{plan.price} <span
+                                    className={theme === "light" ? "ml-2 text-xs text-gray-500" : "ml-2 text-xs text-gray-300"}>{plan.desc}</span>
+                                </Button>
+                            );
+                        })}
                     </div>
                     <div className="flex gap-2 mt-4">
                         <Button onClick={() => setShowUpgrade(false)} variant="ghost">Cancel</Button>
-                        <Button onClick={handleUpgrade} disabled={isUpgrading}>
+                        <Button onClick={handleUpgrade} disabled={isUpgrading || getPlanIndex(selectedPlan) <= userPlanIndex}>
                             {isUpgrading ? "Upgrading..." : "Upgrade"}
                         </Button>
                     </div>
                 </DialogContent>
             </Dialog>
+            )}
         </div>
     );
 };

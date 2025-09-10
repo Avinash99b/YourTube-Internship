@@ -19,7 +19,6 @@ export const postcomment = async (req, res) => {
     const location = commentdata.location || 'Unknown';
     const newComment = new comment({
         ...commentdata,
-        translated_body: await translate(commentdata.commentbody),
         location
     });
     try {

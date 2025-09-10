@@ -8,7 +8,7 @@ import jwt from "jsonwebtoken";
 import "dotenv/config"
 
 // Southern states for email OTP
-const southernStates = ["Tamil nadu", "Kerala", "Karnataka", "Andhra", "Telangana"];
+const southernStates = ["Tamil nadu", "Kerala", "Karnataka", "Andhra Pradesh", "Telangana"];
 
 // Setup nodemailer transporter
 const transporter = nodemailer.createTransport({

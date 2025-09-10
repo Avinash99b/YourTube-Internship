@@ -1,35 +1,34 @@
 import axios from "axios";
-
+import "dotenv/config.js"
 async function translate(text, targetLanguage = "en") {
-    if (!text) {
-        throw Error("text is required");
-    }
-
-    if (!targetLanguage) {
-        throw Error("targetLanguage is required");
-    }
+    if (!text) throw new Error("Text is required");
+    if (!targetLanguage) throw new Error("Target language is required");
 
     try {
-        const url = `https://translation.googleapis.com/language/translate/v2`;
+        const url = "https://deep-translate1.p.rapidapi.com/language/translate/v2";
 
         const response = await axios.post(
             url,
             {
                 q: text,
-                target: targetLanguage, // dynamically set target language
+                source: "auto",        // Auto-detect source language
+                target: targetLanguage // Target language dynamically
             },
             {
-                params: { key: process.env.GOOGLE_API_KEY },
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-rapidapi-host": "deep-translate1.p.rapidapi.com",
+                    "x-rapidapi-key": process.env.RAPIDAPI_KEY // Set in .env
+                },
             }
         );
 
-        return response.data.data.translations[0].translatedText;
+        // Return translated text
+        return response.data?.data.translations?.translatedText;
     } catch (error) {
         console.error(error.response?.data || error.message);
-        throw Error("Something went wrong");
+        throw new Error("Translation failed");
     }
 }
-
 
 export default translate;
