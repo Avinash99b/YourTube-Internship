@@ -13,7 +13,7 @@ services:
       context: ./yourtube
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_BACKEND_URL: https://yt-intern-frontend.avinash9.tech
+        NEXT_PUBLIC_BACKEND_URL: https://yt-intern-backend.avinash9.tech
     env_file:
       - yourtube/.env
     ports:
