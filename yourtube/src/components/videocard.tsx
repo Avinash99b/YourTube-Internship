@@ -6,6 +6,7 @@ import React, { useEffect, useState, useRef } from "react";
 
 export default function VideoCard({ video }: any) {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [isBuffering, setIsBuffering] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
@@ -56,12 +57,22 @@ export default function VideoCard({ video }: any) {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
+          {/* Buffering spinner overlay */}
+          {isBuffering && (
+            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+              <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
           <video
             ref={videoRef}
             src={videoUrl || undefined}
             className="object-cover group-hover:scale-105 transition-transform duration-200 w-full h-full"
             muted
             preload="metadata"
+            onWaiting={() => setIsBuffering(true)}
+            onPlaying={() => setIsBuffering(false)}
+            onCanPlay={() => setIsBuffering(false)}
+            onStalled={() => setIsBuffering(true)}
           />
           <div className="absolute bottom-2 right-2 bg-black/80 dark:bg-white/80 text-white dark:text-black text-xs sm:text-sm md:text-base px-1 rounded shadow">
             10:24

@@ -44,6 +44,7 @@ export default function CustomVideoPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isBuffering, setIsBuffering] = useState(false);
 
   // Helper: Show feedback overlay
   const showFeedback = (msg: string) => {
@@ -336,6 +337,12 @@ export default function CustomVideoPlayer({
       onMouseMove={handleShowControls}
       onClick={handleShowControls}
     >
+      {/* Buffering spinner overlay */}
+      {isBuffering && (
+        <div className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
       {/* Video element replaced with ReactPlayer */}
       <video
         ref={videoRef}
@@ -353,6 +360,10 @@ export default function CustomVideoPlayer({
             setShowUpgrade(true);
           }
         }}
+        onWaiting={() => setIsBuffering(true)}
+        onPlaying={() => setIsBuffering(false)}
+        onCanPlay={() => setIsBuffering(false)}
+        onStalled={() => setIsBuffering(true)}
       >
         {/* fallback source for browsers that don't support JS */}
         {/* <source src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/${encodeURIComponent(video.filepath)}`} type="video/mp4" /> */}
