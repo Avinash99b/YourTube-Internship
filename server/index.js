@@ -14,6 +14,10 @@ import paymentroutes from "./routes/payment.js";
 import fs from "fs";
 import users from "./Modals/Auth.js"
 
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 dotenv.config();
 const app = express();
 import path from "path";
@@ -36,7 +40,7 @@ app.get("/uploads/:filename", authenticate,async (req, res) => {
         return res.status(403).send("Limit Exceeded.")
     }
     try {
-        const filePath = path.join(process.cwd(), "uploads", req.params.filename);
+        const filePath = path.join(__dirname, "uploads", req.params.filename);
 
         if (!fs.existsSync(filePath)) {
             return res.status(404).send("File not found");
