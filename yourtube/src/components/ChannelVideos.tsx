@@ -54,14 +54,14 @@ export default function ChannelVideos({ channelname }: ChannelVideosProps) {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4 text-black dark:text-white transition-colors">Videos</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-3 sm:mb-4 text-black dark:text-white transition-colors">Videos</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         {videos.map((video: any) => (
           <div key={video._id} className="relative">
             <VideoCard video={video} />
             {isOwner && (
               <button
-                className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700"
+                className="absolute top-2 right-2 bg-red-600 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded text-xs sm:text-sm hover:bg-red-700 shadow"
                 onClick={() => handleDelete(video._id)}
                 title="Delete video"
               >

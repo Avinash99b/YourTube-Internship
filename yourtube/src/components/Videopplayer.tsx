@@ -7,6 +7,7 @@ import axiosInstance from "@/lib/axiosinstance";
 import { FaPlay, FaPause, FaForward, FaBackward, FaCommentDots, FaTimes, FaStepForward } from "react-icons/fa";
 import "dotenv/config";
 import ReactPlayer from "react-player";
+import { toast } from "sonner";
 
 interface CustomVideoPlayerProps {
   video: {
@@ -28,7 +29,7 @@ export default function CustomVideoPlayer({
   onDismissWalkthrough,
 }: CustomVideoPlayerProps & { showWalkthrough?: boolean; onDismissWalkthrough?: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { user } = useUser();
+  const { user, watchTimeToday, isWatchTimeExceeded, refreshUsage } = useUser();
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [watchSeconds, setWatchSeconds] = useState(0);
@@ -282,6 +283,53 @@ export default function CustomVideoPlayer({
     };
   }, [video?.filepath]);
 
+  // Add effect to pause video if watch time exceeded
+  useEffect(() => {
+    if (isWatchTimeExceeded && videoRef.current) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+      setUpgradeMsg("You have reached your daily watch time limit for your current plan. Please upgrade to continue watching.");
+      setShowUpgrade(true);
+    }
+  }, [isWatchTimeExceeded]);
+
+  // Prevent play if watch time exceeded
+  const handlePlay = () => {
+    if (isWatchTimeExceeded) {
+      setUpgradeMsg("You have reached your daily watch time limit for your current plan. Please upgrade to continue watching.");
+      setShowUpgrade(true);
+      if (videoRef.current) videoRef.current.pause();
+      setIsPlaying(false);
+      return;
+    }
+    setIsPlaying(true);
+  };
+
+  // Persistent toast for plan exceeded
+  useEffect(() => {
+    const toastId = "plan-exceeded";
+    if (isWatchTimeExceeded) {
+      toast(
+        "Plan exceeded, Video might stop any second",
+        {
+          id: toastId,
+          duration: Infinity
+        }
+      );
+    } else {
+      toast.dismiss(toastId);
+    }
+  }, [isWatchTimeExceeded]);
+
+  // Ping server every 2 seconds for stats while playing
+  useEffect(() => {
+    if (!isPlaying) return;
+    const interval = setInterval(() => {
+      refreshUsage();
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [isPlaying, refreshUsage]);
+
   return (
     <div
       className="relative w-full aspect-video bg-black dark:bg-zinc-900 transition-colors duration-300 rounded-lg overflow-hidden group"
@@ -291,9 +339,20 @@ export default function CustomVideoPlayer({
       {/* Video element replaced with ReactPlayer */}
       <video
         ref={videoRef}
-        controls={false}
-        className="w-full h-full bg-black"
         src={videoUrl || undefined}
+        className="object-cover group-hover:scale-105 transition-transform duration-200 w-full h-full"
+        muted
+        preload="metadata"
+        controls
+        onPlay={handlePlay}
+        onTimeUpdate={() => {
+          if (isWatchTimeExceeded && videoRef.current) {
+            videoRef.current.pause();
+            setIsPlaying(false);
+            setUpgradeMsg("You have reached your daily watch time limit for your current plan. Please upgrade to continue watching.");
+            setShowUpgrade(true);
+          }
+        }}
       >
         {/* fallback source for browsers that don't support JS */}
         {/* <source src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/${encodeURIComponent(video.filepath)}`} type="video/mp4" /> */}
@@ -398,12 +457,11 @@ export default function CustomVideoPlayer({
       {/* Upgrade dialog */}
       <Dialog open={showUpgrade} onOpenChange={setShowUpgrade}>
         <DialogContent>
-          <DialogTitle>Upgrade Your Plan</DialogTitle>
-          <DialogDescription>{upgradeMsg}</DialogDescription>
-          <div className="mt-4">
-            <span className="text-sm">Upgrade your plan on the video page to watch longer!</span>
-          </div>
-          <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded" onClick={() => setShowUpgrade(false)}>Close</button>
+          <DialogTitle>Watch Time Limit Reached</DialogTitle>
+          <DialogDescription>
+            {upgradeMsg}
+          </DialogDescription>
+          {/* Optionally, add upgrade button here */}
         </DialogContent>
       </Dialog>
     </div>

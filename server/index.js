@@ -32,14 +32,21 @@ app.use((req,res,next)=>{
     next();
 })
 
-app.get("/uploads/:filename", authenticate,async (req, res) => {
-    //Check if time still left for watch to user
-    const user = await users.findById(req.user.id)
-    const userWatchTime = await getWatchTime(user._id)
-    if(PLAN_DETAILS[user.plan].watchLimit!=null && (userWatchTime/60) >=PLAN_DETAILS[user.plan].watchLimit){
-        return res.status(403).send("Limit Exceeded.")
-    }
+const CHUNK_SIZE_KB = 1; // change this as needed
+const CHUNK_SIZE = CHUNK_SIZE_KB * 1024;
+
+app.get("/uploads/:filename", authenticate, async (req, res) => {
     try {
+        const user = await users.findById(req.user.id);
+        const userWatchTime = await getWatchTime(user._id);
+
+        if (
+            PLAN_DETAILS[user.plan].watchLimit != null &&
+            userWatchTime / 60 >= PLAN_DETAILS[user.plan].watchLimit
+        ) {
+            return res.status(403).send("Limit Exceeded.");
+        }
+
         const filePath = path.join(__dirname, "uploads", req.params.filename);
 
         if (!fs.existsSync(filePath)) {
@@ -53,16 +60,21 @@ app.get("/uploads/:filename", authenticate,async (req, res) => {
         if (range) {
             const parts = range.replace(/bytes=/, "").split("-");
             const start = parseInt(parts[0], 10);
-            const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-            const chunkSize = end - start + 1;
 
-            const file = fs.createReadStream(filePath, {start, end});
+            // force chunk size in KB
+            let end = start + CHUNK_SIZE - 1;
+            if (end >= fileSize) end = fileSize - 1;
+
+            const chunkSize = end - start + 1;
+            const file = fs.createReadStream(filePath, { start, end });
+
             const head = {
                 "Content-Range": `bytes ${start}-${end}/${fileSize}`,
                 "Accept-Ranges": "bytes",
                 "Content-Length": chunkSize,
                 "Content-Type": "video/mp4",
             };
+
             res.writeHead(206, head);
             file.pipe(res);
         } else {
@@ -78,6 +90,7 @@ app.get("/uploads/:filename", authenticate,async (req, res) => {
         res.status(500).send("Error streaming video");
     }
 });
+
 
 
 app.use(express.json({ limit: "30mb", extended: true }));

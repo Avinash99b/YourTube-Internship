@@ -45,24 +45,23 @@ const ChannelPage = () => {
 
   return (
     <div className={`flex-1 min-h-screen transition-colors duration-300 ${theme === "dark" ? "bg-[var(--card)] text-[var(--card-foreground)]" : "bg-white text-black"}`}>
-      <div className="max-w-full mx-auto">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 w-full">
         <ChannelHeader channel={user} user={user} />
         {/* Upload Video Button - only show if user is channel owner */}
-
-          <div className="flex justify-end px-4 mt-4">
-            <button
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-              onClick={() => setShowUploader(true)}
-            >
-              Upload Video
-            </button>
-          </div>
+        <div className="flex justify-end px-2 sm:px-4 mt-4">
+          <button
+            className="bg-blue-600 text-white px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded text-sm sm:text-base md:text-lg hover:bg-blue-700 transition"
+            onClick={() => setShowUploader(true)}
+          >
+            Upload Video
+          </button>
+        </div>
         {/* VideoUploader Modal */}
         {showUploader && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded shadow-lg w-full max-w-md relative">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-2">
+            <div className="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded shadow-lg w-full max-w-md relative">
               <button
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:hover:text-white text-xl"
                 onClick={() => setShowUploader(false)}
               >
                 &times;
@@ -72,23 +71,23 @@ const ChannelPage = () => {
           </div>
         )}
         <Channeltabs activeTab={activeTab} setActiveTab={setActiveTab} />
-        <div className="px-4 pb-8">
+        <div className="px-2 sm:px-4 pb-8">
           {activeTab === "videos" && <ChannelVideos channelname={user?.channelname} />}
           {activeTab === "downloads" && (
             <div>
-              <h2 className="text-xl font-semibold mb-4">Downloaded Videos</h2>
+              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-3 sm:mb-4">Downloaded Videos</h2>
               {downloadedVideos.length === 0 ? (
                 <div className="text-center py-12 text-gray-600 dark:text-gray-400">
                   No videos downloaded yet.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                   {downloadedVideos.map((video: any) => (
                     <div key={video._id} className="border rounded p-2 bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-700">
-                      <div className="font-semibold">
+                      <div className="font-semibold text-sm sm:text-base md:text-lg">
                         {video.videotitle || video.title}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                      <div className="text-xs sm:text-sm md:text-base text-gray-500 dark:text-gray-400 mb-2">
                         {video.description}
                       </div>
                       {/*<a*/}

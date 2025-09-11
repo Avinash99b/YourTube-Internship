@@ -220,40 +220,39 @@ const VideoInfo = ({video}: any) => {
     };
     return (
         <div
-            className={`rounded-lg shadow p-4 transition-colors duration-300 ${theme === "light" ? "bg-white text-black" : "bg-zinc-900 text-white"}`}>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
-                <Avatar className="w-12 h-12">
+            className={`rounded-lg shadow p-3 sm:p-4 md:p-6 transition-colors duration-300 ${theme === "light" ? "bg-white text-black" : "bg-zinc-900 text-white"}`}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 md:gap-6 mb-4">
+                <Avatar className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16">
                     <AvatarFallback className={theme === "light" ? "bg-gray-200 text-black" : "bg-zinc-700 text-white"}>
                         {video?.videochanel?.[0]}
                     </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                    <h2 className="text-base sm:text-lg font-semibold line-clamp-2">{video?.videotitle}</h2>
-                    <div className={`text-xs ${theme === "light" ? "text-gray-600" : "text-gray-400"}`}>
-                        {video?.videochanel}  {video?.views?.toLocaleString()} views
-                         {formatDistanceToNow(new Date(video?.createdAt))} ago
+                    <h2 className="text-base sm:text-lg md:text-xl font-semibold line-clamp-2">{video?.videotitle}</h2>
+                    <div className={`text-xs sm:text-sm md:text-base ${theme === "light" ? "text-gray-600" : "text-gray-400"}`}>
+                        {video?.videochanel} • {video?.views?.toLocaleString()} views • {formatDistanceToNow(new Date(video?.createdAt))} ago
                     </div>
                 </div>
-                <Button variant="outline" className="ml-0 sm:ml-2 w-full sm:w-auto" onClick={() => {
+                <Button variant="outline" className="ml-0 sm:ml-2 w-full sm:w-auto text-xs sm:text-sm md:text-base px-2 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5" onClick={() => {
                     navigator.clipboard.writeText(window.location.href)
                 }}>
                     <Share className="w-4 h-4 mr-1"/> Share
                 </Button>
             </div>
-            <div className="flex flex-wrap gap-2 sm:gap-4 mb-4 w-full">
+            <div className="flex flex-wrap gap-2 sm:gap-4 md:gap-6 mb-4 w-full">
                 <Button variant={isLiked ? "default" : "ghost"} onClick={handleLike} disabled={!user}
-                        aria-pressed={isLiked} className="flex-1 min-w-[120px]">
+                        aria-pressed={isLiked} className="flex-1 min-w-[100px] sm:min-w-[120px] text-xs sm:text-sm md:text-base px-2 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5">
                     <ThumbsUp className={isLiked ? "fill-white" : ""}/> {likes}
                 </Button>
                 <Button variant={isWatchLater ? "default" : "outline"} onClick={handleWatchLater} disabled={!user}
-                        aria-pressed={isWatchLater} className="flex-1 min-w-[120px]">
+                        aria-pressed={isWatchLater} className="flex-1 min-w-[100px] sm:min-w-[120px] text-xs sm:text-sm md:text-base px-2 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5">
                     <Clock className={isWatchLater ? "fill-white" : ""}/> Watch Later
                 </Button>
-                <Button variant="outline" onClick={handleDownload} disabled={!user || isDownloading} className="flex-1 min-w-[120px]">
+                <Button variant="outline" onClick={handleDownload} disabled={!user || isDownloading} className="flex-1 min-w-[100px] sm:min-w-[120px] text-xs sm:text-sm md:text-base px-2 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5">
                     <Download className="w-4 h-4 mr-1"/> {isDownloading ? "Downloading..." : "Download"}
                 </Button>
                 {canUpgrade && (
-                    <Button variant="outline" onClick={() => setShowUpgrade(true)} disabled={!user} className="flex-1 min-w-[120px]">
+                    <Button variant="outline" onClick={() => setShowUpgrade(true)} disabled={!user} className="flex-1 min-w-[100px] sm:min-w-[120px] text-xs sm:text-sm md:text-base px-2 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5">
                         Upgrade
                     </Button>
                 )}
@@ -282,7 +281,7 @@ const VideoInfo = ({video}: any) => {
                         Choose a plan to unlock more features:
                     </DialogDescription>
                     <div className="flex flex-col gap-2 mt-4">
-                        {PLAN_DETAILS.map((plan, idx) => {
+                        {PLAN_DETAILS.map((plan) => {
                             const planIndex = getPlanIndex(plan.key);
                             const isDisabled = planIndex <= userPlanIndex;
                             return (
@@ -291,23 +290,25 @@ const VideoInfo = ({video}: any) => {
                                     variant={selectedPlan === plan.key ? "default" : "outline"}
                                     className={
                                         `${selectedPlan === plan.key ? (theme === "light" ? "bg-blue-600 text-white" : "bg-blue-500 text-white") : ""} ` +
-                                        (isDisabled ? "opacity-50 blur-[1.5px] pointer-events-none" : "")
+                                        (isDisabled ? "opacity-50 blur-[1.5px] pointer-events-none" : "") +
+                                        " text-xs sm:text-sm md:text-base px-2 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5"
                                     }
                                     onClick={() => !isDisabled && setSelectedPlan(plan.key)}
                                     disabled={isDisabled}
                                 >
-                                    {plan.label} - 9{plan.price} <span
+                                    {plan.label} - ₹{plan.price} <span
                                     className={theme === "light" ? "ml-2 text-xs text-gray-500" : "ml-2 text-xs text-gray-300"}>{plan.desc}</span>
                                 </Button>
                             );
                         })}
                     </div>
-                    <div className="flex gap-2 mt-4">
-                        <Button onClick={() => setShowUpgrade(false)} variant="ghost">Cancel</Button>
-                        <Button onClick={handleUpgrade} disabled={isUpgrading || getPlanIndex(selectedPlan) <= userPlanIndex}>
-                            {isUpgrading ? "Upgrading..." : "Upgrade"}
-                        </Button>
-                    </div>
+                    <Button
+                        onClick={handleUpgrade}
+                        disabled={isUpgrading || selectedPlan === userPlan}
+                        className="mt-4 w-full text-xs sm:text-sm md:text-base px-2 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5"
+                    >
+                        {isUpgrading ? "Upgrading..." : "Upgrade"}
+                    </Button>
                 </DialogContent>
             </Dialog>
             )}

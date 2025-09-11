@@ -12,7 +12,7 @@ const PLAN_LABELS: Record<string, string> = {
   gold: "Gold",
 };
 const PLAN_LIMITS: Record<string, { downloads: number; watch: number | null }> = {
-  free: { downloads: 1, watch: 300 },
+  free: { downloads: 1, watch: 120 },
   bronze: { downloads: Infinity, watch: 420 },
   silver: { downloads: Infinity, watch: 600 },
   gold: { downloads: Infinity, watch: null },
@@ -22,6 +22,8 @@ const PLAN_PRICES: Record<string, number> = {
   silver: 50,
   gold: 100,
 };
+const PLAN_ORDER = ["free", "bronze", "silver", "gold"];
+const getPlanIndex = (plan: string) => PLAN_ORDER.indexOf(plan || "free");
 
 export default function ProfilePage() {
   const { user, refreshUser } = useUser();
@@ -153,6 +155,15 @@ export default function ProfilePage() {
     setDownloads(await getAllVideosFromDb());
   };
 
+  // Helper to get watch time limit label
+  const getWatchLimitLabel = () => {
+    if (!user?.plan) return "-";
+    const plan = user.plan;
+    const limit = PLAN_LIMITS[plan]?.watch;
+    if (limit === null || limit === undefined || limit === Infinity) return "Unlimited";
+    return `${Math.floor(limit / 60)} min`;
+  };
+
   if (!user) return <div className="p-8">Please log in to view your profile.</div>;
 
   const plan = user.plan || "free";
@@ -240,17 +251,22 @@ export default function ProfilePage() {
             <button className="absolute top-2 right-2 text-xl" onClick={() => setUpgradeOpen(false)}>&times;</button>
             <h2 className="text-lg font-bold mb-4">Upgrade Plan</h2>
             <div className="flex flex-col gap-2 mb-4">
-              {Object.keys(PLAN_PRICES).map(p => (
-                <button
-                  key={p}
-                  className={`border rounded px-4 py-2 flex justify-between items-center ${selectedPlan === p ? 'bg-blue-100 dark:bg-blue-900' : ''} ${plan === p ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={plan === p}
-                  onClick={() => handlePlanSelect(p)}
-                >
-                  <span>{PLAN_LABELS[p]}</span>
-                  <span>₹{PLAN_PRICES[p]}</span>
-                </button>
-              ))}
+              {Object.keys(PLAN_PRICES).map(p => {
+                const planIndex = getPlanIndex(p);
+                const userPlanIndex = getPlanIndex(plan);
+                const isDisabled = planIndex <= userPlanIndex;
+                return (
+                  <button
+                    key={p}
+                    className={`border rounded px-4 py-2 flex justify-between items-center ${selectedPlan === p ? 'bg-blue-100 dark:bg-blue-900' : ''} ${isDisabled ? 'opacity-50 blur-[1.5px] pointer-events-none' : ''}`}
+                    disabled={isDisabled}
+                    onClick={() => !isDisabled && handlePlanSelect(p)}
+                  >
+                    <span>{PLAN_LABELS[p]}</span>
+                    <span>₹{PLAN_PRICES[p]}</span>
+                  </button>
+                );
+              })}
             </div>
             <Button onClick={handlePayment} disabled={!selectedPlan || paying} className="w-full">
               {paying ? "Processing..." : "Pay & Upgrade"}

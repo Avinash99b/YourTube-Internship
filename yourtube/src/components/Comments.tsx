@@ -149,23 +149,17 @@ const Comment = ({comment, triggerCommentReload}: CommentProps) => {
     }
     fetchReaction()
     return (
-        <div className="flex flex-col sm:flex-row gap-3 py-3 border-b border-gray-200 dark:border-zinc-700">
-            <div className="flex-shrink-0 flex items-start">
-                <Avatar className="w-8 h-8 sm:w-10 sm:h-10">
-                    <AvatarFallback>{comment.usercommented[0]}</AvatarFallback>
-                </Avatar>
-            </div>
+        <div className="flex gap-2 sm:gap-3 md:gap-4 items-start py-2 sm:py-3 md:py-4 border-b border-gray-200 dark:border-zinc-700">
+            <Avatar className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12">
+                <AvatarFallback>{comment.usercommented[0]}</AvatarFallback>
+            </Avatar>
             <div className="flex-1 min-w-0">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                  <span className="font-semibold text-xs sm:text-sm truncate">{comment.usercommented}</span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">{formatDistanceToNow(new Date(comment.commentedon))} ago</span>
+                <div className="flex items-center gap-2">
+                    <span className="font-semibold text-xs sm:text-sm md:text-base truncate">{comment.usercommented}</span>
+                    <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{formatDistanceToNow(new Date(comment.commentedon))} ago</span>
                 </div>
-                <div className="text-sm sm:text-base mt-1 break-words whitespace-pre-line">
-                    {translating ? (
-                        <div className="animate-pulse bg-gray-200 dark:bg-zinc-700 h-6 w-2/3 rounded mb-2"></div>
-                    ) : (
-                        commentBody
-                    )}
+                <div className="text-xs sm:text-sm md:text-base text-gray-800 dark:text-gray-200 mt-1">
+                    {commentBody}
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
                     <select

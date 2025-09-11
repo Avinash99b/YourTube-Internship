@@ -50,7 +50,7 @@ export default function VideoCard({ video }: any) {
 
   return (
     <Link href={`/watch/${video?._id}`} className="group block">
-      <div className="space-y-3 p-2 sm:p-0">
+      <div className="space-y-3 p-2 sm:p-3 md:p-4">
         <div
           className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 transition-colors duration-300"
           onMouseEnter={handleMouseEnter}
@@ -63,20 +63,20 @@ export default function VideoCard({ video }: any) {
             muted
             preload="metadata"
           />
-          <div className="absolute bottom-2 right-2 bg-black/80 dark:bg-white/80 text-white dark:text-black text-xs px-1 rounded shadow">
+          <div className="absolute bottom-2 right-2 bg-black/80 dark:bg-white/80 text-white dark:text-black text-xs sm:text-sm md:text-base px-1 rounded shadow">
             10:24
           </div>
         </div>
-        <div className="flex gap-3 min-w-0">
-          <Avatar className="w-9 h-9 flex-shrink-0">
+        <div className="flex gap-3 sm:gap-4 min-w-0">
+          <Avatar className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 flex-shrink-0">
             <AvatarFallback>{video?.videochanel[0]}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-sm sm:text-base line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+            <h3 className="font-medium text-sm sm:text-base md:text-lg line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
               {video?.videotitle}
             </h3>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1 truncate">{video?.videochanel}</p>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
+            <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-300 mt-1 truncate">{video?.videochanel}</p>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400 truncate">
               {video?.views.toLocaleString()} views •{" "}
               {formatDistanceToNow(new Date(video?.createdAt))} ago
             </p>

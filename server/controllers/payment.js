@@ -10,6 +10,7 @@ const razorpay = new Razorpay({
 });
 
 export const PLAN_DETAILS = {
+    free:{amount:0,duration:30,watchLimit:2},
   bronze: { amount: 10, duration: 30, watchLimit: 7 },
   silver: { amount: 50, duration: 30, watchLimit: 10 },
   gold: { amount: 100, duration: 30, watchLimit: null },

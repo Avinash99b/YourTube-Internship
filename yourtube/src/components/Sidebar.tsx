@@ -21,7 +21,7 @@ const Sidebar = ({ mobileOpen, setMobileOpen }: { mobileOpen: boolean, setMobile
         <>
             {/* Sidebar for desktop and mobile drawer */}
             <aside
-                className={`fixed z-40 top-0 left-0 h-full bg-[var(--sidebar)] border-r border-[var(--sidebar-border)] p-2 transition-transform duration-300 w-64 md:static md:translate-x-0 md:block ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} md:min-h-screen`}
+                className={`fixed z-40 top-0 left-0 h-full bg-[var(--sidebar)] border-r border-[var(--sidebar-border)] p-2 transition-transform duration-300 w-56 sm:w-64 md:w-72 overflow-y-auto md:static md:translate-x-0 md:block ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} md:min-h-screen`}
                 style={{ minHeight: '100vh' }}
                 aria-label="Sidebar"
             >
@@ -31,7 +31,7 @@ const Sidebar = ({ mobileOpen, setMobileOpen }: { mobileOpen: boolean, setMobile
                         ✕
                     </Button>
                 </div>
-                <nav className="space-y-1">
+                <nav className="space-y-1 sm:space-y-2 md:space-y-3">
                     <Link href="/">
                         <Button variant="ghost"
                                 className="w-full justify-start text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)] transition-colors">
@@ -109,7 +109,7 @@ const Sidebar = ({ mobileOpen, setMobileOpen }: { mobileOpen: boolean, setMobile
                                         >
                                             Create Channel
                                         </Button>
-                                        <Channeldialogue open={isdialogeopen} setOpen={setisdialogeopen} />
+                                        <Channeldialogue isopen={isdialogeopen} onclose={() => setisdialogeopen(false)} />
                                     </div>
                                 )}
                             </div>
