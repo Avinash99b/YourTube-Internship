@@ -1,0 +1,20 @@
+services:
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    env_file:
+      - server/.env
+    ports:
+      - "5000:5000"
+
+  frontend:
+    build:
+      context: ./yourtube
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BACKEND_URL: https://yt-intern-frontend.avinash9.tech
+    env_file:
+      - yourtube/.env
+    ports:
+      - "3000:3000"

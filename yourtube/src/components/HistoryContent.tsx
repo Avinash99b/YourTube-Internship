@@ -33,7 +33,8 @@ export default function HistoryContent() {
 
     try {
       const historyData = await axiosInstance.get(`/history/${user?._id}`);
-        setHistory(historyData.data.filter((item: any) => !item._id));
+      const filtered = historyData.data.filter((item: any) => item._id&&item.videoid);
+      setHistory(filtered);
     } catch (error) {
       console.error("Error loading history:", error);
     } finally {

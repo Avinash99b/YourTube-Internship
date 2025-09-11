@@ -37,3 +37,36 @@ export const getallwatchlater = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+
+export const getWatchLaterStatus = async (req, res) => {
+  const { videoId } = req.params;
+  const { userId } = req.query;
+  if (!userId) {
+    return res.status(400).json({ message: "userId is required" });
+  }
+  try {
+    const found = await watchlater.findOne({ viewer: userId, videoid: videoId });
+    return res.status(200).json({ watchLater: !!found });
+  } catch (error) {
+    console.error("error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+export const removeFromWatchLater = async (req, res) => {
+  const { videoId } = req.params;
+  if (!req.user._id) {
+    return res.status(400).json({ message: "userId is required" });
+  }
+  try {
+    const found = await watchlater.findOneAndDelete({ _id: videoId });
+    if (found) {
+      return res.status(200).json({ removed: true });
+    } else {
+      return res.status(404).json({ removed: false, message: "Not found in Watch Later" });
+    }
+  } catch (error) {
+    console.error("error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};

@@ -32,7 +32,8 @@ export default function WatchLaterContent() {
     try {
       const watchLaterData = await axiosInstance.get(`/watch/${user?._id}`);
 
-      setWatchLater(watchLaterData.data);
+      const filtered = watchLaterData.data.filter((item:any)=>item._id&&item.videoid)
+      setWatchLater(filtered);
     } catch (error) {
       console.error("Error loading history:", error);
     } finally {
@@ -43,14 +44,16 @@ export default function WatchLaterContent() {
   if (loading) {
     return <div>Loading watch later...</div>;
   }
-  const handleRemoveFromWatchLater = async (watchLaterId: string) => {
-    try {
-      console.log("Removing from history:", watchLaterId);
-      setWatchLater(watchLater.filter((item) => item._id !== watchLaterId));
-    } catch (error) {
-      console.error("Error removing from history:", error);
-    }
-  };
+    const handleRemoveFromWatchLater = async (watchLaterId: string) => {
+        try {
+            // Call backend to remove from Watch Later
+            await axiosInstance.delete(`/watch/${watchLaterId}`);
+            setWatchLater(watchLater.filter((item) => item._id !== watchLaterId));
+        } catch (error) {
+            console.error("Error removing from Watch Later:", error);
+        }
+    };
+
 
   if (!user) {
     return (

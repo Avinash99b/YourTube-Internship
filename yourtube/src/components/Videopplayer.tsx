@@ -69,7 +69,7 @@ export default function CustomVideoPlayer({
       }
       // Double tap right: +10s
       if (zone === "right" && tapCounts.current.right === 2) {
-        if (videoRef.current) {
+        if (videoRef.current && videoRef.current?.currentTime) {
           videoRef.current.currentTime = Math.min(
             videoRef.current.currentTime + 10,
             videoRef.current.duration
@@ -79,9 +79,9 @@ export default function CustomVideoPlayer({
       }
       // Double tap left: -10s
       if (zone === "left" && tapCounts.current.left === 2) {
-        if (videoRef.current) {
+        if (videoRef.current && videoRef.current?.currentTime) {
           videoRef.current.currentTime = Math.max(
-            videoRef.current.currentTime - 10,
+            videoRef.current?.currentTime - 10,
             0
           );
           showFeedback("⏪ -10s");
