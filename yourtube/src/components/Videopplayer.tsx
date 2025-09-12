@@ -25,9 +25,7 @@ export default function CustomVideoPlayer({
   video,
   onNextVideo,
   onShowComments,
-  showWalkthrough = false,
-  onDismissWalkthrough,
-}: CustomVideoPlayerProps & { showWalkthrough?: boolean; onDismissWalkthrough?: () => void }) {
+}: CustomVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const { user, watchTimeToday, isWatchTimeExceeded, refreshUsage } = useUser();
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -39,7 +37,6 @@ export default function CustomVideoPlayer({
   const tapTimers = useRef<{
     [zone: string]: NodeJS.Timeout | null;
   }>({ left: null, center: null, right: null });
-  const [walkthroughVisible, setWalkthroughVisible] = useState(showWalkthrough);
   const [showControls, setShowControls] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -118,15 +115,6 @@ export default function CustomVideoPlayer({
       Object.values(tapTimers.current).forEach((timer) => timer && clearTimeout(timer));
     };
   }, []);
-
-  useEffect(() => {
-    setWalkthroughVisible(showWalkthrough);
-  }, [showWalkthrough]);
-
-  const handleDismissWalkthrough = () => {
-    setWalkthroughVisible(false);
-    if (onDismissWalkthrough) onDismissWalkthrough();
-  };
 
   useEffect(() => {
     if (!videoRef.current) return;
@@ -294,8 +282,15 @@ export default function CustomVideoPlayer({
     }
   }, [isWatchTimeExceeded]);
 
-  // Prevent play if watch time exceeded
+  // Only allow play if user is logged in
   const handlePlay = () => {
+    if (!user) {
+      setUpgradeMsg("You need to login to play the video.");
+      setShowUpgrade(true);
+      if (videoRef.current) videoRef.current.pause();
+      setIsPlaying(false);
+      return;
+    }
     if (isWatchTimeExceeded) {
       setUpgradeMsg("You have reached your daily watch time limit for your current plan. Please upgrade to continue watching.");
       setShowUpgrade(true);
@@ -353,6 +348,13 @@ export default function CustomVideoPlayer({
         controls
         onPlay={handlePlay}
         onTimeUpdate={() => {
+          if (!user && videoRef.current) {
+            videoRef.current.pause();
+            setIsPlaying(false);
+            setUpgradeMsg("You need to login to play the video.");
+            setShowUpgrade(true);
+            return;
+          }
           if (isWatchTimeExceeded && videoRef.current) {
             videoRef.current.pause();
             setIsPlaying(false);
@@ -441,27 +443,6 @@ export default function CustomVideoPlayer({
               className="flex-1 accent-blue-500 h-1 rounded-lg cursor-pointer"
               aria-label="Seek"
             />
-          </div>
-        </div>
-      )}
-      {/* Walkthrough overlay */}
-      {walkthroughVisible && (
-        <div className="absolute inset-0 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-zinc-900 text-black dark:text-white p-6 rounded-lg shadow-lg max-w-md w-full transition-colors">
-            <h2 className="text-lg font-bold mb-2">Gesture Walkthrough</h2>
-            <ul className="mb-4 space-y-2">
-              <li>Double-tap left/right: <FaBackward className="inline" />/<FaForward className="inline" /> Rewind/Forward 10s</li>
-              <li>Single-tap center: <FaPlay className="inline" />/<FaPause className="inline" /> Pause/Play</li>
-              <li>Triple-tap left: <FaCommentDots className="inline" /> Show comments</li>
-              <li>Triple-tap right: <FaTimes className="inline" /> Close website</li>
-              <li>Triple-tap center: <FaStepForward className="inline" /> Next video</li>
-            </ul>
-            <button
-              className="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
-              onClick={handleDismissWalkthrough}
-            >
-              Close
-            </button>
           </div>
         </div>
       )}

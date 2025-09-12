@@ -19,14 +19,14 @@ const Sidebar = ({ mobileOpen, setMobileOpen }: { mobileOpen: boolean, setMobile
     const [isdialogeopen, setisdialogeopen] = useState(false);
     return (
         <>
-            {/* Sidebar for desktop and mobile drawer */}
+            {/* Sidebar for all devices, toggled by mobileOpen */}
             <aside
-                className={`fixed z-40 top-0 left-0 h-full bg-[var(--sidebar)] border-r border-[var(--sidebar-border)] p-2 transition-transform duration-300 w-56 sm:w-64 md:w-72 overflow-y-auto md:static md:translate-x-0 md:block ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} md:min-h-screen`}
+                className={`fixed z-40 top-0 left-0 h-full bg-[var(--sidebar)] border-r border-[var(--sidebar-border)] p-2 transition-transform duration-300 w-56 sm:w-64 md:w-72 overflow-y-auto ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} min-h-screen`}
                 style={{ minHeight: '100vh' }}
                 aria-label="Sidebar"
             >
-                {/* Close button for mobile */}
-                <div className="flex justify-end md:hidden">
+                {/* Close button always visible when sidebar is open */}
+                <div className="flex justify-end">
                     <Button variant="ghost" size="icon" onClick={() => setMobileOpen(false)} aria-label="Close sidebar">
                         ✕
                     </Button>
@@ -117,9 +117,9 @@ const Sidebar = ({ mobileOpen, setMobileOpen }: { mobileOpen: boolean, setMobile
                     )}
                 </nav>
             </aside>
-            {/* Overlay for mobile drawer */}
+            {/* Overlay for sidebar when open, on all devices */}
             {mobileOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 z-30 md:hidden" onClick={() => setMobileOpen(false)}></div>
+                <div className="fixed inset-0 bg-black bg-opacity-40 z-30" onClick={() => setMobileOpen(false)}></div>
             )}
         </>
     );

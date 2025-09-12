@@ -3,6 +3,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import React, { useEffect, useState, useRef } from "react";
+import { toast } from "sonner";
 
 export default function VideoCard({ video }: any) {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -36,7 +37,14 @@ export default function VideoCard({ video }: any) {
     };
   }, [video?.filepath]);
 
+  // Only allow play on hover if user is logged in
   const handleMouseEnter = () => {
+    if (!localStorage.getItem("token")) {
+      setIsBuffering(false);
+      setVideoUrl(null);
+      toast.error("You need to login to play the video.");
+      return;
+    }
     if (videoRef.current) {
       videoRef.current.play();
     }
@@ -73,6 +81,12 @@ export default function VideoCard({ video }: any) {
             onPlaying={() => setIsBuffering(false)}
             onCanPlay={() => setIsBuffering(false)}
             onStalled={() => setIsBuffering(true)}
+            onPlay={() => {
+              if (!localStorage.getItem("token")) {
+                if (videoRef.current) videoRef.current.pause();
+                toast.error("You need to login to play the video.");
+              }
+            }}
           />
           <div className="absolute bottom-2 right-2 bg-black/80 dark:bg-white/80 text-white dark:text-black text-xs sm:text-sm md:text-base px-1 rounded shadow">
             10:24

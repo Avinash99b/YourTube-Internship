@@ -27,7 +27,7 @@ const Header = ({ onMenuClick }: { onMenuClick?: () => void }) => {
       <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4 px-2 py-2 sm:px-4 sm:py-2">
         {/* Left: Hamburger + Logo */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink-0">
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick} aria-label="Open sidebar">
+          <Button variant="ghost" size="icon" className="inline-flex" onClick={onMenuClick} aria-label="Open sidebar">
             <Menu className={`w-6 h-6 ${theme === "light" ? "text-gray-900" : "text-gray-100"}`} />
           </Button>
           <Link href="/" className="flex items-center gap-1 min-w-0">
