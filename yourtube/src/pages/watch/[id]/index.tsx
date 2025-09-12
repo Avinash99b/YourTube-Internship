@@ -82,8 +82,6 @@ const index = () => {
               video={video}
               onNextVideo={handleNextVideo}
               onShowComments={handleShowComments}
-              showWalkthrough={showWalkthrough}
-              onDismissWalkthrough={handleDismissWalkthrough}
             />
             <GestureHelp onShowWalkthrough={() => setShowWalkthrough(true)} />
             <VideoInfo video={video} />
